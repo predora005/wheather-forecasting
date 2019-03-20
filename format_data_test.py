@@ -34,5 +34,12 @@ if __name__ == '__main__':
 	#print(input_df.shape)
 	#print(input_df.head())
 	
-	# 気温取得
-	temperature_df = get_temperature(input_data)
+	# 気温,降水量取得
+	temperature = get_temperature(input_data)
+	rainfall = get_rainfall(input_data)
+	wind_speed, wind_dir = get_wind_speed(input_data)
+	
+	print(temperature)
+	print(rainfall)
+	print(wind_speed)
+	print(wind_dir)
