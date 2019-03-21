@@ -16,6 +16,38 @@ WIND_DIRECTION_MAP = {
   '西': -math.pi/2, '西北西': -math.pi*3/8, '北西': -math.pi/4,   '北北西': -math.pi/8
 }
 
+# 天気の分類ルール
+WEATHER_CLASS_NUM = 3
+WEATHER_SUNNY = 0	# 晴れ
+WEATHER_CLOUDY = 1	# くもり
+WEATHER_RAINY = 2	# 雨
+WEATHER_CLASSIFY_MAP = {
+  1  : WEATHER_SUNNY,	# 快晴
+  2  : WEATHER_SUNNY,	# 晴れ
+  3  : WEATHER_CLOUDY,	# 薄曇
+  4  : WEATHER_CLOUDY,	# 曇
+  5  : WEATHER_CLOUDY,	# 煙霧
+  6  : WEATHER_CLOUDY,	# 砂じん嵐
+  7  : WEATHER_CLOUDY,	# 地ふぶき
+  8  : WEATHER_RAINY,	# 霧
+  9  : WEATHER_RAINY,	# 霧雨
+  10 : WEATHER_RAINY,	# 雨
+  11 : WEATHER_RAINY,	# みぞれ
+  12 : WEATHER_RAINY,	# 雪
+  13 : WEATHER_RAINY,	# あられ
+  14 : WEATHER_RAINY,	# ひょう
+  15 : WEATHER_RAINY,	# 雷
+  16 : WEATHER_RAINY,	# しゅう雨または止み間のある雨	
+  17 : WEATHER_RAINY,	# 着氷性の雨	
+  18 : WEATHER_RAINY,	# 着氷性の霧雨	
+  19 : WEATHER_RAINY,	# しゅう雪または止み間のある雪	
+  22 : WEATHER_RAINY,	# 霧雪
+  23 : WEATHER_RAINY,	# 凍雨
+  24 : WEATHER_RAINY,	# 細氷
+  28 : WEATHER_RAINY,	# もや
+  101: WEATHER_RAINY,	# 降水またはしゅう雨性の降水
+}
+
 ##################################################
 # 入力データ(input_data)からデータの列数を取得する
 ##################################################
@@ -61,7 +93,7 @@ def get_temperature(input_data):
 		if quality >= 5:
 			temperature_array[i] = value
 		else:
-			temperature_array[i] = np.nan
+			temperature_array[i] = numpy.nan
 		
 	#print(temperature_array)
 	return temperature_array
@@ -108,7 +140,7 @@ def get_rainfall(input_data):
 		if quality >= 5:
 			rainfall_array[i] = value
 		else:
-			rainfall_array[i] = np.nan
+			rainfall_array[i] = numpy.nan
 		
 	#print(rainfall_array)
 	return rainfall_array
@@ -162,7 +194,7 @@ def get_wind_speed(input_data):
 	# 品質情報が8(正常値),5(20%以下の欠損)なら正常値を設定し、
 	# それ以外の場合はNaNを設定する
 	# 最初の6行はヘッダーなので読み飛ばす
-	# ndarray(rainfall_array)に結果を格納する
+	# ndarray(wind_speed_array, wind_dir_array)に結果を格納する
 	data_num = len(input_data) - ROW_DATA_START
 	wind_speed_array = numpy.zeros(data_num, dtype=float)
 	wind_dir_array = numpy.zeros(data_num, dtype=float)
@@ -175,7 +207,7 @@ def get_wind_speed(input_data):
 		if quality >= 5:
 			wind_speed_array[i] = value
 		else:
-			wind_speed_array[i] = np.nan
+			wind_speed_array[i] = numpy.nan
 		
 		# 風向
 		value = input_data[index][value_dir_col]
@@ -187,7 +219,7 @@ def get_wind_speed(input_data):
 			else:
 				wind_dir_array[i] = WIND_DIRECTION_MAP[value]
 		else:
-			wind_dir_array[i] = np.nan
+			wind_dir_array[i] = numpy.nan
 		
 	#print(rainfall_array)
 	return (wind_speed_array, wind_dir_array)
@@ -198,9 +230,54 @@ def get_wind_speed(input_data):
 	
 	#return df
 	
-
-
-
-
+##################################################
+# 入力データ(input_data)から天気を抽出し整形して返す
+# (晴れ、曇り、雨に分類)
+##################################################
+def get_weather(input_data):
+	
+	col_num = get_col_num(input_data)
+	
+	# 天気のデータの中から、
+	# 値そのものの列と、品質情報の列の列番号を取得する
+	value_col = 0
+	quality_col = 0
+	
+	for i in range(col_num):
+		name = input_data[3][i]
+		if name.find('天気') >= 0 :
+			info = input_data[5][i]
+			if not info:
+				value_col = i
+			elif info.find('品質情報') >= 0 :
+				quality_col = i
+	print(value_col)
+	print(quality_col)
+	
+	# 品質情報が8(正常値),5(20%以下の欠損)なら正常値を設定し、
+	# それ以外の場合はNaNを設定する
+	# 最初の6行はヘッダーなので読み飛ばす
+	# ndarray(weather_array)に結果を格納する
+	data_num = len(input_data) - ROW_DATA_START
+	weather_array = numpy.zeros((data_num, WEATHER_CLASS_NUM), dtype=float)
+	print(weather_array.shape)
+	for i in range(data_num):
+		index = i + ROW_DATA_START
+		quality = int(input_data[index][quality_col])
+		if quality >= 5:
+			value = int(input_data[index][value_col])
+			j = WEATHER_CLASSIFY_MAP[value]
+			weather_array[i,j] = 1.0
+		else:
+			weather_array[i,0] = numpy.nan
+		
+	#print(rainfall_array)
+	return weather_array
+	
+	# ndarrayをDataFrameに変換
+	#df = pandas.DataFrame(temperature_array, columns=['Temp.'])
+	#print(df)
+	
+	#return df
 
 
