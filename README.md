@@ -14,7 +14,8 @@ numpy, keras等を使って試行錯誤しています。
 
 - python3
 - numpy
-- pandas
+- tensorflow
+- keras
 
 ## Usage
 
@@ -43,7 +44,8 @@ source bin/activate
 仮想環境にnumpyをインストールする。
 ```bash
 pip3 install numpy
-pip3 install pandas
+pip3 install tensorflow
+pip3 install keras
 ```
 
 GitHubからリポジトリをクローンする。
