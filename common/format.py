@@ -251,8 +251,6 @@ def get_weather(input_data):
 				value_col = i
 			elif info.find('品質情報') >= 0 :
 				quality_col = i
-	print(value_col)
-	print(quality_col)
 	
 	# 品質情報が8(正常値),5(20%以下の欠損)なら正常値を設定し、
 	# それ以外の場合はNaNを設定する
@@ -260,7 +258,6 @@ def get_weather(input_data):
 	# ndarray(weather_array)に結果を格納する
 	data_num = len(input_data) - ROW_DATA_START
 	weather_array = numpy.zeros((data_num, WEATHER_CLASS_NUM), dtype=float)
-	print(weather_array.shape)
 	for i in range(data_num):
 		index = i + ROW_DATA_START
 		quality = int(input_data[index][quality_col])
@@ -271,7 +268,6 @@ def get_weather(input_data):
 		else:
 			weather_array[i,0] = numpy.nan
 		
-	#print(rainfall_array)
 	return weather_array
 	
 	# ndarrayをDataFrameに変換
