@@ -57,99 +57,92 @@ def get_col_num(input_data):
 	return col_num
 	
 ##################################################
+# 入力データ(input_data)から
+# 指定したデータが格納された列のインデックスを取得する。
+# データの名称が3行あるうちの1行目の名称をvalue_name1,
+# 2行目の名称をvalue_name2に指定する。
+# [Args]
+#   inputa_data : 入力データ
+#   value_name1 : データの名称1
+#   value_name2 : データの名称2(省略可)
+# [Return]
+#   value_index   : 値自体(float)が格納されている列のインデックス
+#   quality_index : 品質番号が格納されている列のインデックス
+##################################################
+def get_col_index(input_data, value_name1, value_name2=None):
+	
+	col_num = len(input_data[3])
+	
+	value_index = 0
+	quality_index = 0
+	
+	for i in range(col_num):
+		
+		# value_name1を含むデータを検索する
+		name = input_data[3][i]
+		if name.find(value_name1) >= 0 :
+			name2 = input_data[4][i]
+			info = input_data[5][i]
+			
+			# value_name2が指定無しの場合は
+			# value_name1のみで判断する
+			if value_name2 is None:
+				
+				# name2が空文字列(指定なし)の行のみ扱う
+				if not name2 :
+					if not info:
+						value_index = i
+					elif info.find('品質情報') >= 0 :
+						quality_index = i
+			
+			# value_name2が指定されている場合は合致するデータを検索
+			elif name2.find(value_name2) >= 0 :
+				if not info:
+					value_index = i
+				elif info.find('品質情報') >= 0 :
+					quality_index = i
+			
+	return (value_index, quality_index)
+	
+##################################################
+# 入力データ(input_data)の指定した列の値(float)を
+# ndarrayに格納して返す。
+# 品質情報が8(正常値),5(20%以下の欠損)なら正常値を設定し、
+# それ以外の場合はNaNを設定する
+##################################################
+def get_value_array(input_data, value_index, quality_index):
+	
+	# 最初の6行はヘッダーなので読み飛ばす
+	data_num = len(input_data) - ROW_DATA_START
+	value_array = numpy.zeros(data_num, dtype=float)
+	for i in range(data_num):
+		index = i + ROW_DATA_START
+		value = float(input_data[index][value_index])
+		quality = int(input_data[index][quality_index])
+		if quality >= 5:
+			value_array[i] = value
+		else:
+			value_array[i] = numpy.nan
+		
+	return value_array
+	
+##################################################
 # 入力データ(input_data)から気温を抽出し整形して返す
 ##################################################
 def get_temperature(input_data):
 	
-	col_num = get_col_num(input_data)
-	#print(col_num)
-	
-	# 気温のデータの中から、
-	# 値そのものの列と、品質情報の列の列番号を取得する
-	value_col = 0
-	quality_col = 0
-	
-	for i in range(col_num):
-		name = input_data[3][i]
-		if name.find('気温') >= 0 :
-			info = input_data[5][i]
-			if not info:
-				value_col = i
-			elif info.find('品質情報') >= 0 :
-				quality_col = i
-	#print(value_col)
-	#print(quality_col)
-	
-	# 品質情報が8(正常値),5(20%以下の欠損)なら正常値を設定し、
-	# それ以外の場合はNaNを設定する
-	# 最初の6行はヘッダーなので読み飛ばす
-	# ndarray(temperature_array)に結果を格納する
-	data_num = len(input_data) - ROW_DATA_START
-	temperature_array = numpy.zeros(data_num, dtype=float)
-	for i in range(data_num):
-		index = i + ROW_DATA_START
-		value = float(input_data[index][value_col])
-		quality = int(input_data[index][quality_col])
-		if quality >= 5:
-			temperature_array[i] = value
-		else:
-			temperature_array[i] = numpy.nan
-		
-	#print(temperature_array)
-	return temperature_array
-	
-	# ndarrayをDataFrameに変換
-	#df = pandas.DataFrame(temperature_array, columns=['Temp.'])
-	#print(df)
-	
-	#return df
+	value_index, quality_index = get_col_index(input_data, '気温')
+	temperature = get_value_array(input_data, value_index, quality_index)
+	return temperature
 	
 ##################################################
 # 入力データ(input_data)から降水量を抽出し整形して返す
 ##################################################
 def get_rainfall(input_data):
 	
-	col_num = get_col_num(input_data)
-	
-	# 降水量のデータの中から、
-	# 値そのものの列と、品質情報の列の列番号を取得する
-	value_col = 0
-	quality_col = 0
-	
-	for i in range(col_num):
-		name = input_data[3][i]
-		if name.find('降水量') >= 0 :
-			info = input_data[5][i]
-			if not info:
-				value_col = i
-			elif info.find('品質情報') >= 0 :
-				quality_col = i
-	#print(value_col)
-	#print(quality_col)
-	
-	# 品質情報が8(正常値),5(20%以下の欠損)なら正常値を設定し、
-	# それ以外の場合はNaNを設定する
-	# 最初の6行はヘッダーなので読み飛ばす
-	# ndarray(rainfall_array)に結果を格納する
-	data_num = len(input_data) - ROW_DATA_START
-	rainfall_array = numpy.zeros(data_num, dtype=float)
-	for i in range(data_num):
-		index = i + ROW_DATA_START
-		value = float(input_data[index][value_col])
-		quality = int(input_data[index][quality_col])
-		if quality >= 5:
-			rainfall_array[i] = value
-		else:
-			rainfall_array[i] = numpy.nan
-		
-	#print(rainfall_array)
-	return rainfall_array
-	
-	# ndarrayをDataFrameに変換
-	#df = pandas.DataFrame(temperature_array, columns=['Temp.'])
-	#print(df)
-	
-	#return df
+	value_index, quality_index = get_col_index(input_data, '降水量')
+	rainfall = get_value_array(input_data, value_index, quality_index)
+	return rainfall
 	
 ##################################################
 # 入力データ(input_data)から風速(速度と風向き)を
@@ -157,39 +150,13 @@ def get_rainfall(input_data):
 ##################################################
 def get_wind_speed(input_data):
 	
-	col_num = get_col_num(input_data)
-	
 	# 風速のデータの中から、
 	# 風速(m/s), 風速(m/s)の品質, 風向, 風向の品質が
 	# 格納されている列の列番号を取得する
-	value_speed_col = 0
-	quality_speed_col = 0
-	value_dir_col = 0
-	quality_dir_col = 0
-	
-	for i in range(col_num):
-		name = input_data[3][i]
-		if name.find('風速') >= 0 :
-			info1 = input_data[4][i]
-			info2 = input_data[5][i]
-			
-			####################
-			# 風速(m/s)
-			####################
-			if not info1:
-				if not info2:
-					value_speed_col = i
-				elif info2.find('品質情報') >= 0 :
-					quality_speed_col = i
-			
-			####################
-			# 風向
-			####################
-			else:
-				if not info2:
-					value_dir_col = i
-				elif info2.find('品質情報') >= 0 :
-					quality_dir_col = i
+	value_speed_col, quality_speed_col = \
+		get_col_index(input_data, '風速')
+	value_dir_col, quality_dir_col = \
+		get_col_index(input_data, '風速', '風向')
 	
 	# 品質情報が8(正常値),5(20%以下の欠損)なら正常値を設定し、
 	# それ以外の場合はNaNを設定する
@@ -221,14 +188,24 @@ def get_wind_speed(input_data):
 		else:
 			wind_dir_array[i] = numpy.nan
 		
-	#print(rainfall_array)
 	return (wind_speed_array, wind_dir_array)
 	
-	# ndarrayをDataFrameに変換
-	#df = pandas.DataFrame(temperature_array, columns=['Temp.'])
-	#print(df)
+##################################################
+# 入力データ(input_data)から相対湿度を抽出し整形して返す
+##################################################
+def get_humidity(input_data):
 	
-	#return df
+	value_index, quality_index = get_col_index(input_data, '相対湿度')
+	humidity = get_value_array(input_data, value_index, quality_index)
+	return humidity
+	
+##################################################
+# 入力データ(input_data)から日照時間を抽出し整形して返す
+##################################################
+def get_daylight(input_data):
+	value_index, quality_index = get_col_index(input_data, '日照時間')
+	daylight = get_value_array(input_data, value_index, quality_index)
+	return daylight
 	
 ##################################################
 # 入力データ(input_data)から天気を抽出し整形して返す
@@ -236,21 +213,7 @@ def get_wind_speed(input_data):
 ##################################################
 def get_weather(input_data):
 	
-	col_num = get_col_num(input_data)
-	
-	# 天気のデータの中から、
-	# 値そのものの列と、品質情報の列の列番号を取得する
-	value_col = 0
-	quality_col = 0
-	
-	for i in range(col_num):
-		name = input_data[3][i]
-		if name.find('天気') >= 0 :
-			info = input_data[5][i]
-			if not info:
-				value_col = i
-			elif info.find('品質情報') >= 0 :
-				quality_col = i
+	value_index, quality_index = get_col_index(input_data, '天気')
 	
 	# 品質情報が8(正常値),5(20%以下の欠損)なら正常値を設定し、
 	# それ以外の場合はNaNを設定する
@@ -260,9 +223,9 @@ def get_weather(input_data):
 	weather_array = numpy.zeros((data_num, WEATHER_CLASS_NUM), dtype=float)
 	for i in range(data_num):
 		index = i + ROW_DATA_START
-		quality = int(input_data[index][quality_col])
+		quality = int(input_data[index][quality_index])
 		if quality >= 5:
-			value = int(input_data[index][value_col])
+			value = int(input_data[index][value_index])
 			j = WEATHER_CLASSIFY_MAP[value]
 			weather_array[i,j] = 1.0
 		else:
@@ -270,10 +233,5 @@ def get_weather(input_data):
 		
 	return weather_array
 	
-	# ndarrayをDataFrameに変換
-	#df = pandas.DataFrame(temperature_array, columns=['Temp.'])
-	#print(df)
-	
-	#return df
 
 
