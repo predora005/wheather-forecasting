@@ -135,7 +135,7 @@ def get_temperature(input_data):
 	temperature = get_value_array(input_data, value_index, quality_index)
 	return temperature
 	
-##################################################
+#################################################
 # 入力データ(input_data)から降水量を抽出し整形して返す
 ##################################################
 def get_rainfall(input_data):
@@ -206,6 +206,15 @@ def get_daylight(input_data):
 	value_index, quality_index = get_col_index(input_data, '日照時間')
 	daylight = get_value_array(input_data, value_index, quality_index)
 	return daylight
+
+#################################################
+# 入力データ(input_data)から現地気圧を抽出し整形して返す
+##################################################
+def get_atom_pressure(input_data):
+	
+	value_index, quality_index = get_col_index(input_data, '現地気圧')
+	atom_pressure = get_value_array(input_data, value_index, quality_index)
+	return atom_pressure
 	
 ##################################################
 # 入力データ(input_data)から天気を抽出し整形して返す
