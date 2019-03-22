@@ -48,8 +48,10 @@ def extract_learning_data(csv_data):
 	
 	# 入力データ結合
 	input_data = numpy.stack(
-		[temperature, rainfall, wind_speed, wind_dir, 
-		 humidity, daylight, atom_pressure], 1)
+		[rainfall, daylight], 1)
+		#[rainfall, humidity, daylight, atom_pressure], 1)
+		#[temperature, rainfall, wind_speed, wind_dir, 
+		# humidity, daylight, atom_pressure], 1)
 	
 	# 出力データ取得：天気
 	label_data = get_weather(csv_data)
@@ -94,16 +96,16 @@ if __name__ == '__main__':
 	train_input, train_label = extract_learning_data(train_csv_data)
 	test_input, test_label = extract_learning_data(test_csv_data)
 	
-	print(train_input.shape)
-	print(test_input.shape)
+	#print(train_input.shape)
+	#print(test_input.shape)
 	
 	# モデルの作成
 	input_data_dim = train_input.shape[1]
 	label_num = train_label.shape[1]
 	model = Sequential()
-	model.add(Dense(16, input_dim=input_data_dim))
+	model.add(Dense(32, input_dim=input_data_dim))
 	model.add(Activation('relu'))
-	model.add(Dense(16))
+	model.add(Dense(32))
 	model.add(Activation('relu'))
 	model.add(Dense(label_num))
 	model.add(Activation('softmax'))
@@ -129,8 +131,8 @@ if __name__ == '__main__':
 		print('%07d : loss=%f, acc=%f' % (epoch, score[0], score[1]))
 		#print(model.metrics_names['accuracy'])
 	
-	# 5データだけ値表示
-	instant_num = 5
+	# 20データだけ値表示
+	instant_num = 20
 	instant_input = test_input[0:instant_num,]
 	actual_label = test_label[0:instant_num,]
 	for i in range(instant_num):

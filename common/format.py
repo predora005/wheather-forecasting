@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import math, numpy
+import sys, math, numpy
 
 ##################################################
 # 定数
@@ -104,6 +104,38 @@ def get_col_index(input_data, value_name1, value_name2=None):
 	return (value_index, quality_index)
 	
 ##################################################
+# 入力データ(input_data)から
+# 指定したデータが格納された列のインデックスを取得する。
+# データの名称が3行あるうちの
+# 1行目の名称をvalue_name1, 2行目の名称をvalue_name2, 
+# 3行目の名称をvalue_name3に指定する。
+# [Args]
+#   inputa_data : 入力データ
+#   value_name1 : データの名称1
+#   value_name2 : データの名称2
+#   value_name3 : データの名称3
+# [Return]
+#   col_index   : 指定した名称のデータ格納されている列のインデックス
+##################################################
+def get_col_index3(input_data, value_name1, value_name2, value_name3):
+	
+	col_num = len(input_data[3])
+	
+	col_index = 0
+	
+	for i in range(col_num):
+		
+		name1 = input_data[3][i]
+		name2 = input_data[4][i]
+		name3 = input_data[5][i]
+		if (name1 == value_name1) and \
+		   (name2 == value_name2) and \
+		   (name3 == value_name3) :
+			col_index = i
+				
+	return col_index
+	
+##################################################
 # 入力データ(input_data)の指定した列の値(float)を
 # ndarrayに格納して返す。
 # 品質情報が8(正常値),5(20%以下の欠損)なら正常値を設定し、
@@ -139,8 +171,39 @@ def get_temperature(input_data):
 ##################################################
 def get_rainfall(input_data):
 	
-	value_index, quality_index = get_col_index(input_data, '降水量')
-	rainfall = get_value_array(input_data, value_index, quality_index)
+	#value_index, quality_index = get_col_index(input_data, '降水量')
+	#rainfall = get_value_array(input_data, value_index, quality_index)
+	
+	value_index = get_col_index3(input_data, '降水量(mm)', '', '')
+	isnot_rain_index = get_col_index3(input_data, '降水量(mm)', '', '現象なし情報')
+	quality_index = get_col_index3(input_data, '降水量(mm)', '', '品質情報')
+	
+	# 品質情報が8(正常値),5(20%以下の欠損)なら正常値を設定し、
+	# それ以外の場合はNaNを設定する
+	# 最初の6行はヘッダーなので読み飛ばす
+	data_num = len(input_data) - ROW_DATA_START
+	rainfall = numpy.zeros((data_num), dtype=float)
+	for i in range(data_num):
+		index = i + ROW_DATA_START
+		quality = int(input_data[index][quality_index])
+		isnot_rain = int(input_data[index][isnot_rain_index])
+		
+		# 品質が一定以上の場合
+		if quality >= 5:
+			
+			# 降水がある(現象なし=0)場合で、
+			# 降水量が0(mm)の場合は、0.1(mm)を設定する。
+			value = float(input_data[index][value_index])
+			if (isnot_rain == False) and \
+			   (value < sys.float_info.epsilon) :
+				rainfall[i] = 0.1
+			else:
+				rainfall[i] = value
+			
+		# 品質が一定未満の場合
+		else:
+			rainfall[i] = numpy.nan
+	
 	return rainfall
 	
 ##################################################
