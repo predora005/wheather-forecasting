@@ -2,6 +2,7 @@
   
 import sys, os
 from common.format import *
+from common.processing import *
 import csv
 import numpy
 import pandas
@@ -47,8 +48,8 @@ def extract_learning_data(csv_data):
 	
 	# 入力データ結合
 	input_data = numpy.stack(
-		[rainfall, humidity, daylight], 1)
-		#[temperature, rainfall, wind_speed, wind_dir, humidity, daylight], 1)
+		[temperature, rainfall, wind_speed, wind_dir, 
+		 humidity, daylight, atom_pressure], 1)
 	
 	# 出力データ取得：天気
 	label_data = get_weather(csv_data)
@@ -59,6 +60,9 @@ def extract_learning_data(csv_data):
 	isnan_row = numpy.logical_or(isnan_row_input, isnan_row_label)
 	input_data = input_data[~isnan_row,]
 	label_data = label_data[~isnan_row,]
+	
+	# 入力データをMAX-MIN標準化する
+	input_data = max_min_normalize(input_data, axis=0)
 	
 	return (input_data, label_data)
 	
@@ -90,6 +94,9 @@ if __name__ == '__main__':
 	train_input, train_label = extract_learning_data(train_csv_data)
 	test_input, test_label = extract_learning_data(test_csv_data)
 	
+	print(train_input.shape)
+	print(test_input.shape)
+	
 	# モデルの作成
 	input_data_dim = train_input.shape[1]
 	label_num = train_label.shape[1]
@@ -112,16 +119,24 @@ if __name__ == '__main__':
 	
 	# 学習実行
 	epoch = 0
-	for i in range(100):
+	for i in range(10):
 		model.fit(
 			train_input, train_label, 
-			epochs=10, batch_size=32, shuffle=True, verbose=0)
+			epochs=100, batch_size=32, shuffle=True, verbose=0)
 		score = model.evaluate(test_input, test_label, verbose=0)
 		
-		epoch = epoch + 10
+		epoch = epoch + 100
 		print('%07d : loss=%f, acc=%f' % (epoch, score[0], score[1]))
 		#print(model.metrics_names['accuracy'])
 	
-	
-	
+	# 5データだけ値表示
+	instant_num = 5
+	instant_input = test_input[0:instant_num,]
+	actual_label = test_label[0:instant_num,]
+	for i in range(instant_num):
+		predict_label = model.predict(instant_input)
+		print('####################################')
+		print(instant_input[i])
+		print(predict_label[i])
+		print(actual_label[i])
 	

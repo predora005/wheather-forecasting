@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import math
-import numpy, pandas
+import math, numpy
 
 ##################################################
 # 定数
