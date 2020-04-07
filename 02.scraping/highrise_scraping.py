@@ -64,7 +64,7 @@ if __name__ == '__main__':
                 highriseWeather = HighriseWeatherDataScraping(year, month, day, hour, point_no)
                 
                 # スクレイピングを実行する。
-                highriseWeather.scrape_high_rise_weather_data().write_to_csv(filename)
+                highriseWeather.scrape().write_to_csv(filename)
                 
                 # 1秒ディレイ
                 time.sleep(1)

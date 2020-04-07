@@ -6,7 +6,6 @@ while read row; do
     date=`echo ${row} | cut -d , -f 3`
     days=`echo ${row} | cut -d , -f 4`
     
-    python3 hirise_scraping.py ${name} ${point_no} ${date} ${days}
-    #echo "${column1}の番号は${column2}です。"
+    python3 highrise_scraping.py ${name} ${point_no} ${date} ${days}
     
 done < ./csv/highrise_scraping.csv

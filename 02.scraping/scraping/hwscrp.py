@@ -153,7 +153,7 @@ class HighriseWeatherDataScraping:
     ##############################
     # 高層の気象データをスクレイピングする
     ##############################
-    def scrape_high_rise_weather_data(self):
+    def scrape(self):
         """高層の気象データをスクレイピングする。
         
         Returns:
