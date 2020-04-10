@@ -37,7 +37,7 @@ class GroundWeatherDataScraping:
             day         (int) : 日
             
         Returns:
-           GroundWeatherdataScraping: 自分自身
+            GroundWeatherdataScraping: 自分自身
         """
         
         self.__prec_no = prec_no
