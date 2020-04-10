@@ -22,4 +22,8 @@ if __name__ == '__main__':
     df1 = wdfproc.extract_from_columns(df, columns)
     print(df1.head())
     
+    df1.columns = [t1 for t1, t2 in df1.columns]
+    print(df1.head())
     
+    df2 = wdfproc.extract_row_isin(df1, '時', [9, 21])
+    print(df2)
