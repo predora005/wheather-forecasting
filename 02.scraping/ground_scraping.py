@@ -38,8 +38,7 @@ if __name__ == '__main__':
     
     # 地点ごとにディレクトリ作成
     homedir = os.path.expanduser('~')
-    #dirpath = "{0:02d}_{1:05d}".format(prec_no, block_no)
-    dirpath = '{0:s}/{1:s}_{2:02d}_{3:05d}'.format(homedir, name, prec_no, block_no)
+    dirpath = '{0:s}/ground_weather/{1:s}_{2:02d}_{3:05d}'.format(homedir, name, prec_no, block_no)
     os.makedirs(dirpath, exist_ok=True)
     
     # スクレイピングを開始する年月日を設定

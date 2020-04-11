@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import re
 import datetime
+from . import name_handle
 
 ##################################################
 # 指定したディレクトリから
@@ -60,17 +61,21 @@ def read_ground(file_path):
     
     # ファイル名から地点名、日付を抽出
     file_name = os.path.basename(file_path)
-    result = re.search(r"([^0-9]+)_(\d+)_([0-9]+)_(\d+)_(\d+)_(\d+)", file_name)
-    name, prec_no, block_no, year, month, day = result.groups()
-    #print(file_name)
-    #print(name, prec_no, block_no, year, month, day)
+    elements = name_handle.elements_from_filename(file_name)
+    name = elements['name']
+    year = elements['year']
+    month = elements['month']
+    day = elements['day']
+    #result = re.search(r"([^0-9]+)_(\d+)_([0-9]+)_(\d+)_(\d+)_(\d+)", file_name)
+    #name, prec_no, block_no, year, month, day = result.groups()
+    #name, prec_no, block_no, year, month, day = name_handle.elements_from_filename(file_name)
     
     # 日付をDataFrameに追加する
-    dt = datetime.datetime(int(year), int(month), int(day))
-    df['日付'] = dt
+    date = datetime.datetime(year, month, day)
+    df[('日付','日付')] = date
     
     # 地点名をDataFrameに追加する
-    df['地点'] = name
+    df[('地点','地点')] = name
     
     return df
 

@@ -37,7 +37,7 @@ if __name__ == '__main__':
     
     # 地点ごとにディレクトリ作成
     homedir = os.path.expanduser('~')
-    dirpath = '{0:s}/{1:s}_{2:d}'.format(homedir, name, point_no)
+    dirpath = '{0:s}/highrise_weather//{1:s}_{2:d}'.format(homedir, name, point_no)
     os.makedirs(dirpath, exist_ok=True)
     
     # スクレイピングを開始する年月日を設定
