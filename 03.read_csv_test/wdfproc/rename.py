@@ -12,10 +12,10 @@ __COLUMN_MAP = {
 }
 
 ##################################################
-# DataFrameの列名を変更する
+# DataFrameの列名を変更する(地上気象データ用)
 ##################################################
 def rename_column_ground(df, place_name):
-    """ DataFrameの列名を変更する
+    """ DataFrameの列名を変更する(地上気象データ用)
 
     Args:
         df          (DataFrame) : 変更対象のデータ
@@ -41,6 +41,36 @@ def rename_column_ground(df, place_name):
             new_column = new_name
         else:
             col_str = [place_name, '_', new_name]
+            new_column = ''.join(col_str)
+        
+        new_columns.append(new_column)
+    
+    df.columns = new_columns
+    return df
+    
+
+##################################################
+# DataFrameの列名を変更する(高層気象データ用)
+##################################################
+def rename_column_highrise(df, place_name):
+    """ DataFrameの列名を変更する(高層気象データ用)
+
+    Args:
+        df          (DataFrame) : 変更対象のデータ
+        place_name  (string)    : 地点名
+
+    Returns:
+        DataFrame : 列名変更後のデータ
+    """
+    
+    new_columns = []
+    for column in df.columns:
+        
+        # '日付','時'以外は先頭に地点名を付ける
+        if column in ('日付', '時'):
+            new_column = column
+        else:
+            col_str = [place_name, '_', column]
             new_column = ''.join(col_str)
         
         new_columns.append(new_column)

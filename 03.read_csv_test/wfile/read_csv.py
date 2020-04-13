@@ -53,7 +53,7 @@ def read_ground(file_path):
         file_path    (string) : ファイルパス
 
     Returns:
-        DataFrame : ファイルパスの読込結果
+        DataFrame : ファイルの読込結果
     """
     
     # CSVファイル読み込み
@@ -72,7 +72,7 @@ def read_ground(file_path):
     df[('日付','日付')] = date
     
     # 地点名をDataFrameに追加する
-    df[('地点','地点')] = name
+    #df[('地点','地点')] = name
     
     return df
 
@@ -88,7 +88,7 @@ def read_highrise(file_path):
         file_path    (string) : ファイルパス
 
     Returns:
-        DataFrame : ファイルパスの読込結果
+        DataFrame : ファイルの読込結果
     """
     
     # CSVファイル読み込み
@@ -101,13 +101,17 @@ def read_highrise(file_path):
     year = elements['year']
     month = elements['month']
     day = elements['day']
+    hour = elements['hour']
 
     # 日付をDataFrameに追加する
     date = datetime.datetime(year, month, day)
-    df[('日付','日付')] = date
+    df['日付'] = date
+    
+    # 時刻をDataFrameに追加する
+    df['時'] = hour
     
     # 地点名をDataFrameに追加する
-    df[('地点','地点')] = name
+    #df['地点'] = name
     
     return df
 

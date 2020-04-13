@@ -18,5 +18,6 @@ if __name__ == '__main__':
     ground_df.to_csv('ground.csv')
     
     # 高層気象データを取得する
-    #highrise_dir = os.path.join(cwd, 'highrise_weather')
-    #highrise_df = wfile.get_highrise_weather(highrise_dir)
+    highrise_dir = os.path.join(cwd, 'highrise_weather')
+    highrise_df = wfile.get_highrise_weather(highrise_dir)
+    highrise_df.to_csv('highrise.csv')

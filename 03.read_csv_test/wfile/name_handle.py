@@ -62,7 +62,7 @@ def elements_from_filename_highrise(filename):
     Returns:
         list[string] : 要素のリスト
     """
-    result = re.search(r"(\D+)_(\d+)_(\d+)_(\d+)_(\d+).csv", filename)
+    result = re.search(r"(\D+)_(\d+)_(\d+)_(\d+)_(\d+)_H(\d+).csv", filename)
     values = result.groups()
     elements = {
         'name'      : values[0], 
@@ -70,6 +70,7 @@ def elements_from_filename_highrise(filename):
         'year'      : int(values[2]),
         'month'     : int(values[3]),
         'day'       : int(values[4]),
+        'hour'      : int(values[5])
     }
 
     return elements
