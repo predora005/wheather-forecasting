@@ -117,14 +117,14 @@ def get_highrise_weather_one_place(dir_path):
         new_column_prefix = []
         new_column_prefix.append('地上_')
         for i in range(1, len(df)):
-            prefix = '{0:.0f}_'.format(df.loc[i,'気圧(hPa)'])
+            prefix = '{0:.0f}hPa_'.format(df.loc[i,'気圧(hPa)'])
             new_column_prefix.append(prefix)
                 
         # 新しい列名を作成する
         new_columns = []
         for col in df.columns:
             #print(col)
-            if col not in ('日付', '時'):
+            if col not in ('日付', '時', '気圧(hPa)'):
             #    pass
             #else:
                 for prefix in new_column_prefix:
@@ -136,7 +136,7 @@ def get_highrise_weather_one_place(dir_path):
         #new_data = np.empty(df.size)
         new_values = []
         for col in df.columns:
-            if col not in ('日付', '時'):
+            if col not in ('日付', '時', '気圧(hPa)'):
                 #print(col)
                 #l = df[col].tolist()
                 #print(l)
