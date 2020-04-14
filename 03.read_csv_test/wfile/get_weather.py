@@ -85,11 +85,12 @@ def get_ground_weather(input_dir):
 ##################################################
 # 1地点の高層気象データを取得する
 ##################################################
-def get_highrise_weather_one_place(dir_path):
+def get_highrise_weather_one_place(dir_path, boundary_pressure=400):
     """ 1地点の高層気象データを取得する
     
     Args:
-        dir_path(string) : ディレクトリパス
+        dir_path(string)            : ディレクトリパス
+        boundary_pressure(float)    : 指定した気圧(hPa)より大きい指定気圧面のデータを扱う
 
     Returns:
         DataFrame : ファイルの読込結果
@@ -105,14 +106,13 @@ def get_highrise_weather_one_place(dir_path):
         # 高層気象データ読み込み
         df = read_csv.read_highrise(file_path)
         
-        ##############################
-        # 1行のDataFrameに変換する
-        ##############################
+        # 指定した気圧(hPa)より大きい指定気圧面のデータを抽出する
+        df = df[df['気圧(hPa)'] > boundary_pressure]
+
         # 日付と時刻データを抽出する
         date = df.loc[0,'日付']
         hour = df.loc[0,'時']
-        #place_name = df.loc[0,'地点']
-        
+
         # 新しい列名のPrefixを作成する
         new_column_prefix = []
         new_column_prefix.append('地上_')
@@ -121,35 +121,28 @@ def get_highrise_weather_one_place(dir_path):
             new_column_prefix.append(prefix)
                 
         # 新しい列名を作成する
+        #   ex) 1000hPa_高度(m)
         new_columns = []
         for col in df.columns:
-            #print(col)
+            # '日付','時', '気圧(hPa)'を除いた列を扱う
             if col not in ('日付', '時', '気圧(hPa)'):
-            #    pass
-            #else:
                 for prefix in new_column_prefix:
-                    #print(prefix)
                     new_column = prefix + col
                     new_columns.append(new_column)
         
-        # 1行のDataFrameに変換する
-        #new_data = np.empty(df.size)
+        # 複数列のデータを1列のデータに展開する
         new_values = []
         for col in df.columns:
             if col not in ('日付', '時', '気圧(hPa)'):
-                #print(col)
-                #l = df[col].tolist()
-                #print(l)
                 new_values.extend(df[col].tolist())
-        
-        #print(len(new_values))
-        #print(len(new_columns))
         
         # 新しいDataFrameを作成する
         df = pd.DataFrame(new_values, index=new_columns)
+        
+        # 1列のDataFrameから1行のDataFrameに変換する
         df = df.T
         
-        # 日付と時刻、地点名をDataFrameに追加する
+        # 日付と時刻をDataFrameに追加する
         df['日付'] = date
         df['時'] = hour
 
