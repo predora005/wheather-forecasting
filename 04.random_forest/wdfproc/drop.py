@@ -17,7 +17,8 @@ def drop_ground(df):
         DataFrame : 不要データ除去後のDataFrame
     """
     new_df = df.replace('--', np.nan)
-    new_df = new_df.dropna(how='any', axis=1)
+    new_df = new_df.dropna(how='all', axis=1)
+    #new_df = new_df.dropna(how='any', axis=1)
     
     return new_df
 
