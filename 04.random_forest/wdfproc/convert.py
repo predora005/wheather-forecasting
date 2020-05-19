@@ -198,9 +198,63 @@ def type_to_float32(df, inplace=True):
     else:
         new_df = df.copy()
     
-    for col, typ in df.dtypes:
+    for col in new_df.columns:
+        typ = new_df[col].dtype
         if typ == object:
-            new_df[col] = new_df.astype({col: np.float32})
-        elif type == np.float64:
-            new_df[col] = new_df.astype({col: np.float32})
+            # object -> np.float32
+            new_df = new_df.astype({col: np.float32})
+        elif typ == np.float64:
+            # np.float64 -> np.float32
+            #print(col, typ)
+            new_df = new_df.astype({col: np.float32})
         
+    return new_df
+    
+##################################################
+# 天気を指定した境界値で分類する
+##################################################
+def classify_weather(df, boudaries=None, inplace=True):
+    """ 天気を指定した境界値で分類する
+
+    Args:
+        df(DataFrame)   : 変換対象のDataFrame
+        boudaries(List) : 境界値のリスト
+        inplace(bool)   : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    
+    # 元のDataFrameを上書きするか否か
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    # 境界値が未設定の場合はデフォルト値を使用する
+    if boudaries is None:
+        boudaries = [3, 10]
+    
+    # 天気を境界値で分類する関数
+    def classify(weather):
+        class_value = -1
+        for i, boundary in enumerate(boudaries):
+            # 境界値未満だったらループ離脱
+            if boundary > weather:
+                class_value = i
+                break
+            
+        # 全ての境界値以上の場合
+        if class_value < 0:
+            class_value = len(boudaries)
+        
+        return class_value
+
+    # 名称に天気を含む列を抽出する
+    weather_cols = [col for col in new_df.columns if('天気' in col)]
+    
+    # 天気を指定した境界値で分類する
+    for col in weather_cols:
+        new_df[col] = new_df[col].map(lambda col : classify(col))
+    
+    return new_df
