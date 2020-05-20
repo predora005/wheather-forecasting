@@ -7,9 +7,13 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+mpl.font_manager._rebuild() #キャッシュの削除
+plt.rcParams['font.family'] = 'IPAGothic' # インストールしたフォントを指定
+
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score
+from sklearn.metrics import accuracy_score
+#from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score
 
 ##################################################
 # 地上気象データ取得
@@ -71,15 +75,21 @@ def get_highrise_weather():
 def make_training_data(df, y_name):
     
     df = df.drop(columns=['時', '日付'])
-    train_data, test_data = train_test_split(df)
-    
-    #train_data.info()
+    train_data, test_data = train_test_split(df, shuffle=True)
     
     train_x = train_data.drop(columns=[y_name, ])
     train_y = train_data[y_name]
     
     test_x = test_data.drop(columns=[y_name])
     test_y = test_data[y_name]
+    
+    # Xデータから末尾(最新時刻)のデータを削る
+    train_x = train_x.iloc[:-1,]
+    test_x = test_x.iloc[:-1,]
+    
+    # Yデータから先頭(最急時刻)のデータを削る
+    train_y = train_y.iloc[1:,]
+    test_y = test_y.iloc[1:,]
     
     return train_x, train_y, test_x, test_y
     
@@ -99,43 +109,47 @@ if __name__ == '__main__':
     train_x, train_y, test_x, test_y = make_training_data(df, 'Mito_天気')
     
     # ランダムフォレストの学習モデルを生成する
-    model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=1)
+    model = RandomForestClassifier(n_estimators=5000, max_depth=10, random_state=1)
+    
+    # 学習データで学習を行う
     model.fit(train_x, train_y)
     
-    #font = {"family":"IPAexGothic"}
-    #matplotlib.rc('font',**font)
-    #matplotlib.font_manager._rebuild()
-    mpl.font_manager._rebuild() #キャッシュの削除
-    plt.rcParams['font.family'] = 'IPAGothic' # インストールしたフォントを指定
-    
+    # 特徴量の重要度を可視化する
     importances = model.feature_importances_
     columns = train_x.columns
     feature_importances = pd.DataFrame(importances, index=train_x.columns, columns=['Importance'])
     feature_importances = feature_importances.sort_values(by='Importance', ascending=False)
-    #fig = plt.figure(figsize=(8.0, 6.0))
     feature_importances.plot(kind='bar', figsize=(10,10))
-    plt.savefig('test.png')
-    print(mpl.matplotlib_fname()) #設定ファイルを表示（matplotlibrcは後で作ります）
-    print(mpl.rcParams['font.family']) #現在使用しているフォントを表示
-    print(mpl.get_configdir()) #設定ディレクトリを表示
-    print(mpl.get_cachedir()) #キャッシュディレクトリを表示
-    print(mpl.font_manager.findSystemFonts())
-    #print(matplotlib.font_manager.ttflist)
-    #print(matplotlib.rcParams['font.family']) #現在使用しているフォントを表示
+    plt.savefig('test.png', bbox_inches='tight')
     
-    # Trainning with cross validation and and score calculation
-    #model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=1)
-    #kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=1)
-    #result = cross_val_score(model, train_x, train_y, cv=kf, scoring='accuracy')
-    #print('Score:{0:.4f}'.format(result.mean()))
-
-    # Evaluation of features
-    #model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=1)
-    #model.fit(train_x, train_y)
-
-    #importances = model.feature_importances_
-    #columns = train_x.columns
+    # テストデータで予測を行う
+    pred_y = model.predict(test_x)
     
-    #feature_importances = pd.DataFrame(importances, index=train_x.columns, columns=['Importance'])
-    #feature_importances = feature_importances.sort_values(by='Importance', ascending=False)
-    #feature_importances.plot.bar()
+    # 正解率を表示する
+    acc = accuracy_score(test_y, pred_y)
+    print('Score:{0:.4f}'.format(acc))
+    
+    #print(test_y)
+    #idx_sunny = test_y[test_y == 0]
+    idx_sunny = np.where(test_y.values == 0)[0]
+    #print(idx_sunny)
+    #print(test_y.iloc[idx_sunny])
+    #print(pred_y[idx_sunny])
+    acc_sunnny = accuracy_score(test_y.iloc[idx_sunny], pred_y[idx_sunny])
+    print('Score(sunny):{0:.4f}'.format(acc_sunnny))
+    
+    idx_cloud = np.where(test_y.values == 1)[0]
+    #print(idx_cloud)
+    #print(test_y.iloc[idx_cloud])
+    #print(pred_y[idx_cloud])
+    acc_cloud= accuracy_score(test_y.iloc[idx_cloud], pred_y[idx_cloud])
+    print('Score(cloud):{0:.4f}'.format(acc_cloud))
+    
+    idx_rainy = np.where(test_y.values == 2)[0]
+    print(idx_rainy)
+    print(test_y.iloc[idx_rainy])
+    print(pred_y[idx_rainy])
+    acc_rainy= accuracy_score(test_y.iloc[idx_rainy], pred_y[idx_rainy])
+    print('Score(rainy):{0:.4f}'.format(acc_rainy))
+    
+    
