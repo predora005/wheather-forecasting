@@ -67,10 +67,15 @@ def get_ground_weather():
 ##################################################
 def get_highrise_weather():
     
+    # カレントディレクトリを取得する
+    cwd = os.getcwd()
+    
     # 高層気象データを取得する
     highrise_dir = os.path.join(cwd, 'highrise_weather')
     highrise_df = wfile.get_highrise_weather(highrise_dir)
     highrise_df.to_csv('highrise.csv')
+    
+    print(highrise_df.info())
     
 ##################################################
 # 学習データ作成
@@ -134,6 +139,9 @@ if __name__ == '__main__':
     # 地上気象データを取得する
     df = get_ground_weather()
     
+    # 高層気象データを取得する
+    df2 = get_highrise_weather()
+    
     # NaNを置換する
     df = df.fillna(-9999)
     
@@ -141,8 +149,8 @@ if __name__ == '__main__':
     train_x, train_y, test_x, test_y = make_training_data(df, 'Mito_天気')
     
     # ランダムフォレストの学習モデルを生成する
-    model = DecisionTreeClassifier(max_depth=20, random_state=1)
-    #model = RandomForestClassifier(n_estimators=1000, max_depth=20, random_state=1)
+    #model = DecisionTreeClassifier(max_depth=20, random_state=1)
+    model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=1)
     
     # 学習データで学習を行う
     model.fit(train_x, train_y)
