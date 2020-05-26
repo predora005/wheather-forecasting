@@ -19,6 +19,17 @@ from sklearn.metrics import accuracy_score
 #from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score
 
 ##################################################
+# 指定したリストの列を除去する
+##################################################
+def remove_cols(df, remove_columns):
+    
+    for remove_col in remove_columns:
+        remove_cols = [col for col in df.columns if(remove_col in col)]
+        df = df.drop(columns=remove_cols)
+    
+    return df
+
+##################################################
 # 地上気象データ取得
 ##################################################
 def get_ground_weather():
@@ -55,6 +66,13 @@ def get_ground_weather():
     ground_df = wdfproc.type_to_float32(ground_df)
     ground_df.to_csv('ground7.csv')
     
+    # 不要な列を除去する
+    ground_df = remove_cols(
+        ground_df, 
+        [ '海面気圧', '気温', '露点温度', '蒸気圧', '日照時間', 
+          '降雪', '積雪', '雲量', '視程', '全天日射', '降水量', '風速' ]
+    )
+
     print(ground_df.info())
 
     return ground_df
@@ -80,10 +98,12 @@ def get_highrise_weather():
     highrise_df = wdfproc.convert_wind_to_vector_highrise(highrise_df)
     highrise_df.to_csv('highrise2.csv')
     
-    # 高度の列を除去する
-    altitude_cols = [col for col in highrise_df.columns if('高度' in col)]
-    highrise_df = highrise_df.drop(columns=altitude_cols)
-    
+    # 不要な列を除去する
+    highrise_df = remove_cols(
+        highrise_df, 
+        [ '高度', '気温', '風速', '1000', '925', '900', '850', '700', '500']
+    )
+
     print(highrise_df.info())
     
     return highrise_df
@@ -158,6 +178,8 @@ if __name__ == '__main__':
     # 地上気象データと高層気象データをマージする
     df = pd.merge(gdf, hdf, on=('日付','時'))
     
+    #df = gdf
+    
     # NaNを置換する
     df = df.fillna(-9999)
     
@@ -165,7 +187,7 @@ if __name__ == '__main__':
     train_x, train_y, test_x, test_y = make_training_data(df, 'Mito_天気')
     
     # ランダムフォレストの学習モデルを生成する
-    model = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=1)
+    model = RandomForestClassifier(n_estimators=500, max_depth=20, random_state=1)
     
     # 学習データで学習を行う
     model.fit(train_x, train_y)
@@ -186,7 +208,7 @@ if __name__ == '__main__':
         filled=True, 
         rounded=True)
     graph = pydotplus.graph_from_dot_data( dot_data )
-    #graph.write_png('tree_graphviz.png')
+    graph.write_png('tree_graphviz.png')
     
     fig = plt.figure(figsize=(100, 50))
     ax = fig.add_subplot()

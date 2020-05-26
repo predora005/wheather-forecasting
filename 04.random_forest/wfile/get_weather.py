@@ -85,7 +85,7 @@ def get_ground_weather(input_dir):
 ##################################################
 # 1地点の高層気象データを取得する
 ##################################################
-def get_highrise_weather_one_place(dir_path, boundary_pressure=400):
+def get_highrise_weather_one_place(dir_path, boundary_pressure=350):
     """ 1地点の高層気象データを取得する
     
     Args:
@@ -102,16 +102,22 @@ def get_highrise_weather_one_place(dir_path, boundary_pressure=400):
     # 気象データを読み込み、DataFrameに格納する
     highrise_df = None
     for file_path in file_paths:
-        
+            
         # 高層気象データ読み込み
         df = read_csv.read_highrise(file_path)
         
+        #if file_path == '/home/ec2-user/highrise_weather/Shionomisaki_47778/Shionomisaki_47778_2017_01_30_H21.csv':
+        #    print(df)
+            
         # 指定した気圧(hPa)より大きい指定気圧面のデータを抽出する
         df = df[df['気圧(hPa)'] > boundary_pressure]
 
+        #if file_path == '/home/ec2-user/highrise_weather/Shionomisaki_47778/Shionomisaki_47778_2017_01_30_H21.csv':
+        #    print(df)
+            
         # 日付と時刻データを抽出する
-        date = df.loc[0,'日付']
-        hour = df.loc[0,'時']
+        date = df.loc[1,'日付']
+        hour = df.loc[1,'時']
 
         # 新しい列名のPrefixを作成する
         new_column_prefix = []
