@@ -48,10 +48,11 @@ __CLOUD_VOLUME_TO_FLOAT_MAP = {
 }
 
 ##################################################
-# 風速・風向きをX,Y方向のベクトルに変換する
+# 風速・風向きをX,Y方向のベクトルに変換する(地上気象データ用)
 ##################################################
-def convert_wind_to_vector(df, inplace=True):
+def convert_wind_to_vector_ground(df, inplace=True):
     """ 風速・風向きをX,Y方向のベクトルに変換する
+        (地上気象データ用)
 
     Args:
         df(DataFrame) : 変換対象のDataFrame
@@ -93,12 +94,9 @@ def convert_wind_to_vector(df, inplace=True):
         place_name = result.group(1)
         speed_col = place_name + '_' + '風速(m/s)'
         new_df = new_df.astype({speed_col: float})
-        #print(speed_col)
-        #print(df[speed_col].tolist())
 
         wind_x_col = place_name + '_' + '風速(m/s)_X'
         wind_y_col = place_name + '_' + '風速(m/s)_Y'
-        #df[wind_x_col] = df[speed_col].values * df[angle_col].values
         new_df[wind_x_col] = new_df[speed_col] * np.cos(df[angle_col])
         new_df[wind_y_col] = new_df[speed_col] * np.sin(df[angle_col])
 
@@ -205,7 +203,6 @@ def type_to_float32(df, inplace=True):
             new_df = new_df.astype({col: np.float32})
         elif typ == np.float64:
             # np.float64 -> np.float32
-            #print(col, typ)
             new_df = new_df.astype({col: np.float32})
         
     return new_df
@@ -258,3 +255,67 @@ def classify_weather(df, boudaries=None, inplace=True):
         new_df[col] = new_df[col].map(lambda col : classify(col))
     
     return new_df
+
+##################################################
+# 風速・風向きをX,Y方向のベクトルに変換する(高層気象データ用)
+##################################################
+def convert_wind_to_vector_highrise(df, inplace=True):
+    """ 風速・風向きをX,Y方向のベクトルに変換する
+        (高層気象データ用)
+
+    Args:
+        df(DataFrame) : 変換対象のDataFrame
+        inplace(bool) : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    # 風向きを度数(°)からラジアンに変換する関数
+    def to_radian(wind_deg):
+        radian = (-wind_deg + 90)/180 * math.pi
+        return radian
+    
+    wind_radian_cols = []
+    
+    # 風向きを度数(°)からラジアンに変換する
+    wind_dir_cols = [col for col in new_df.columns if('風向' in col)]
+    for col in wind_dir_cols:
+        new_col = col + '(rad)'
+        new_df[new_col] = new_df[col].map(lambda col : to_radian(col))
+        wind_radian_cols.append(new_col)
+
+    # 風速のうち無効なデータを0に補正する
+    wind_speed_cols = [col for col in new_df.columns if('風速' in col)]
+    for col in wind_speed_cols:
+        if df[col].dtype == object:
+            new_df.replace({col: ['−', '静穏']}, 0.0, inplace=True)
+
+    # 風向き・風速を、X,Y方向の風速に変換する
+    for radian_col in wind_radian_cols:
+        print(radian_col)
+        result = re.search(r"(.+)_風向.*\(rad\)", radian_col)
+        prifix = result.group(1)
+        speed_col = prifix + '_' + '風速(m/s)'
+        print(speed_col)
+        new_df = new_df.astype({speed_col: float})
+        
+        wind_x_col = prifix + '_' + '風速(m/s)_X'
+        wind_y_col = prifix + '_' + '風速(m/s)_Y'
+        new_df[wind_x_col] = new_df[speed_col] * np.cos(df[radian_col])
+        new_df[wind_y_col] = new_df[speed_col] * np.sin(df[radian_col])
+
+        # 新しく追加した列の小数点を丸める
+        new_df = new_df.round({wind_x_col: 3, wind_y_col: 3})
+
+    # 元の風向き・風速を削除する
+    new_df = new_df.drop(columns=wind_dir_cols)
+    new_df = new_df.drop(columns=wind_speed_cols)
+    new_df = new_df.drop(columns=wind_radian_cols)
+
+    return new_df
+    

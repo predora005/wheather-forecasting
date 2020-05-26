@@ -10,11 +10,8 @@ import matplotlib.pyplot as plt
 mpl.font_manager._rebuild() #キャッシュの削除
 plt.rcParams['font.family'] = 'IPAGothic' # インストールしたフォントを指定
 
-#from dtreeviz.trees import dtreeviz
-#from sklearn.externals.six import StringIO
 import pydotplus
 from sklearn.tree import export_graphviz, plot_tree
-#from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
@@ -39,7 +36,7 @@ def get_ground_weather():
     ground_df.to_csv('ground2.csv')
     
     # 風速・風向きを数値に変換する
-    ground_df = wdfproc.convert_wind_to_vector(ground_df)
+    ground_df = wdfproc.convert_wind_to_vector_ground(ground_df)
     ground_df.to_csv('ground3.csv')
     
     # 天気を数値に変換する
@@ -73,9 +70,23 @@ def get_highrise_weather():
     # 高層気象データを取得する
     highrise_dir = os.path.join(cwd, 'highrise_weather')
     highrise_df = wfile.get_highrise_weather(highrise_dir)
-    highrise_df.to_csv('highrise.csv')
+    highrise_df.to_csv('highrise1.csv')
+    
+    # 高層気象データから不要データを除去する
+    #highrise_df = wdfproc.drop_higirise(highrise_df)
+    #highrise_df.to_csv('highrise2.csv')
+    
+    # 風速・風向きを数値に変換する
+    highrise_df = wdfproc.convert_wind_to_vector_highrise(highrise_df)
+    highrise_df.to_csv('highrise2.csv')
+    
+    # 高度の列を除去する
+    altitude_cols = [col for col in highrise_df.columns if('高度' in col)]
+    highrise_df = highrise_df.drop(columns=altitude_cols)
     
     print(highrise_df.info())
+    
+    return highrise_df
     
 ##################################################
 # 学習データ作成
@@ -106,8 +117,10 @@ def show_importance_of_feature(model, train_x):
     columns = train_x.columns
     feature_importances = pd.DataFrame(importances, index=train_x.columns, columns=['Importance'])
     feature_importances = feature_importances.sort_values(by='Importance', ascending=False)
-    feature_importances.plot(kind='bar', figsize=(10,10))
+    feature_importances.plot(kind='bar', figsize=(20,20))
     plt.savefig('feature_importances.png', bbox_inches='tight')
+    
+    feature_importances.to_csv('feature_importances.csv')
 
 ##################################################
 # 正解率を表示する
@@ -137,10 +150,13 @@ def print_accuracy(test_y, pred_y):
 if __name__ == '__main__':
     
     # 地上気象データを取得する
-    df = get_ground_weather()
+    gdf = get_ground_weather()
     
     # 高層気象データを取得する
-    df2 = get_highrise_weather()
+    hdf = get_highrise_weather()
+    
+    # 地上気象データと高層気象データをマージする
+    df = pd.merge(gdf, hdf, on=('日付','時'))
     
     # NaNを置換する
     df = df.fillna(-9999)
@@ -149,8 +165,7 @@ if __name__ == '__main__':
     train_x, train_y, test_x, test_y = make_training_data(df, 'Mito_天気')
     
     # ランダムフォレストの学習モデルを生成する
-    #model = DecisionTreeClassifier(max_depth=20, random_state=1)
-    model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=1)
+    model = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=1)
     
     # 学習データで学習を行う
     model.fit(train_x, train_y)
@@ -164,46 +179,23 @@ if __name__ == '__main__':
     # 正解率を表示する
     print_accuracy(test_y, pred_y)
     
-    #viz = dtreeviz(
-    #    model.estimators_[0],
-    #    train_x, 
-    #    train_y,
-    #    target_name='weather',
-    #    feature_names=train_x.columns,
-    #    class_names=['Sunny', 'Cloud', 'Rain']
-    #)
-    #viz.save("tree_dtreeviz.svg")
-    
-    #dot_data = StringIO()
-    #tree.export_graphviz(
-    #    model.estimators_[0], 
-    #    out_file=dot_data,  
-    #    feature_names=train_x.columns,
-    #    class_names=['Sunny', 'Cloud', 'Rain'],  
-    #    filled=True, rounded=True, special_characters=True
-    #)
-    #graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
-    #graph.write_png("tree_graphviz.png") 
-    
     dot_data = export_graphviz(
         model.estimators_[0], 
-        #model,
         feature_names=train_x.columns,
         class_names=['Sunny', 'Cloud', 'Rain'],  
         filled=True, 
         rounded=True)
     graph = pydotplus.graph_from_dot_data( dot_data )
-    graph.write_png('tree_graphviz.png')
+    #graph.write_png('tree_graphviz.png')
     
     fig = plt.figure(figsize=(100, 50))
     ax = fig.add_subplot()
     plot_tree(
         model.estimators_[0], 
-        #model,
         feature_names=train_x.columns,
         ax=ax, 
         class_names=['Sunny', 'Cloud', 'Rain'],
         filled=True
     )
-    plt.savefig('tree_plt.png', bbox_inches='tight')
+    #plt.savefig('tree_plt.png', bbox_inches='tight')
     
