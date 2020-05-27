@@ -82,16 +82,8 @@ def get_ground_weather(input_dir):
     # 日付と時の列を先頭に移動する
     ground_df = move_datetime_column_to_top(ground_df)
     
-    #new_columns = ['日付', '時']
-    #for col in ground_df.columns:
-    #    if (col != '日付') and (col != '時'):
-    #        new_columns.append(col)
-    #
-    #ground_df = ground_df.loc[:, new_columns]
-    
     return ground_df
-    
-    
+
 ##################################################
 # 1地点の高層気象データを取得する
 ##################################################
@@ -116,15 +108,9 @@ def get_highrise_weather_one_place(dir_path, boundary_pressure=350):
         # 高層気象データ読み込み
         df = read_csv.read_highrise(file_path)
         
-        #if file_path == '/home/ec2-user/highrise_weather/Shionomisaki_47778/Shionomisaki_47778_2017_01_30_H21.csv':
-        #    print(df)
-            
         # 指定した気圧(hPa)より大きい指定気圧面のデータを抽出する
         df = df[df['気圧(hPa)'] > boundary_pressure]
 
-        #if file_path == '/home/ec2-user/highrise_weather/Shionomisaki_47778/Shionomisaki_47778_2017_01_30_H21.csv':
-        #    print(df)
-            
         # 日付と時刻データを抽出する
         date = df.loc[1,'日付']
         hour = df.loc[1,'時']

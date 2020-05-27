@@ -46,6 +46,9 @@ def get_ground_weather():
         ground_dir = os.path.join(cwd, 'ground_weather')
         ground_df = wfile.get_ground_weather(ground_dir)
         ground_df.to_csv(ground_weather_csv)
+        
+    # 天気記号を数値に変換する
+    ground_df = wdfproc.convert_symbol_to_number(ground_df)
     
     # 地上気象データからNaNが含まれる列を削る
     ground_df = wdfproc.drop_ground(ground_df)
@@ -66,11 +69,10 @@ def get_ground_weather():
     # 天気を指定した境界値で分類する
     #  - 水戸は3分割、それ以外は○分割にする
     weather_cols = [col for col in ground_df.columns if('天気' in col)]
-    #idx = weather_cols.index('Mito_天気') 
-    #print(idx)
     weather_cols.pop( weather_cols.index('Mito_天気') )
-    #print(weather_cols)
-    ground_df = wdfproc.replace_weather(ground_df, columns=weather_cols)
+    ground_df = wdfproc.replace_weather(
+                        ground_df, columns=weather_cols, 
+                         mode=wdfproc.WeatherConvertMode.Coarse)
     ground_df.to_csv('ground6.csv')
     ground_df = wdfproc.replace_weather(ground_df, columns=['Mito_天気'])
     ground_df.to_csv('ground7.csv')
@@ -198,8 +200,6 @@ if __name__ == '__main__':
     
     # 地上気象データと高層気象データをマージする
     df = pd.merge(gdf, hdf, on=('日付','時'))
-    
-    #df = gdf
     
     # NaNを置換する
     df = df.fillna(-9999)

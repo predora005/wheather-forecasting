@@ -18,9 +18,9 @@ __WIND_DIRECTION_TO_ANGLE_MAP = {
 }
 
 # 天気を変換する際のモード
-#class WeatherConvertMode(Enum):
-#    Coarse = 1  # 粗い
-#    Fine = 2    # 細かい
+class WeatherConvertMode(Enum):
+    Coarse = 1  # 粗い
+    Fine = 2    # 細かい
 
 # 天気を整数値に変換するマップ
 __WEATHER_TO_INT_MAP = {
@@ -50,7 +50,7 @@ __WEATHER_TO_INT_MAP = {
     '降水またはしゅう雨性の降水'    : 101,
 }
 
-# 天気を分類するマップ
+# 天気を変換するマップ(粗め)
 __WEATHER_REPLACE_MAP_COARSE = {
     1:  0, 2:  0,           # 快晴, 晴れ    -> 晴れ
     3:  1, 4:  1,           # 薄曇, 曇り    -> くもり
@@ -59,9 +59,25 @@ __WEATHER_REPLACE_MAP_COARSE = {
     14: 2, 16: 2, 17: 2,    # ひょう, しゅう雨, 着氷性の雨  -> 雨
     18: 2, 19: 2, 22: 2,    # 着氷性の霧雨, しゅう雪, 霧雪  -> 雨
     23: 2, 24: 2, 28: 2,    # 凍雨, 細氷, もや              -> 雨
-    101:2,                  # 降水, 細氷, もや              -> 雨
+    101:2,                  # 降水                          -> 雨
     5:  3, 6:  3, 7:  3,    # 煙霧, 砂じん嵐, 地ふぶき  -> その他
-    15: 3, 0:  3            # 雷, 不明                   -> その他
+    15: 3, 0:  3            # 雷, 不明                  -> その他
+}
+
+# 天気を変換するマップ(細かめ)
+__WEATHER_REPLACE_MAP_FINE = {
+    1:  0,                  # 快晴  -> 快晴
+    2:  1,                  # 晴れ  -> 晴れ
+    3:  2,                  # 薄曇  -> 薄曇
+    4:  3,                  # 曇り  -> 曇り
+    8:  4, 9:  4, 10: 4,    # 霧, 霧雨, 雨                  -> 雨
+    11: 4, 12: 4, 13: 4,    # みぞれ, 雪, あられ            -> 雨
+    14: 4, 16: 4, 17: 4,    # ひょう, しゅう雨, 着氷性の雨  -> 雨
+    18: 4, 19: 4, 22: 4,    # 着氷性の霧雨, しゅう雪, 霧雪  -> 雨
+    23: 4, 24: 4, 28: 4,    # 凍雨, 細氷, もや              -> 雨
+    101:4,                  # 降水                          -> 雨
+    5:  5, 6:  5, 7:  5,    # 煙霧, 砂じん嵐, 地ふぶき  -> その他
+    15: 5, 0:  5            # 雷, 不明                  -> その他
 }
 
 # 雲量を浮動小数点数に変換するマップ
@@ -69,6 +85,44 @@ __CLOUD_VOLUME_TO_FLOAT_MAP = {
     '0+'  : 0.5, 
     '10-' : 9.5,
 }
+
+##################################################
+# 天気記号を数値に変換する
+##################################################
+def convert_symbol_to_number(df, inplace=True):
+    """ 天気記号を数値に変換する
+
+    Args:
+        df(DataFrame) : 変換対象のDataFrame
+        inplace(bool) : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+
+    # 天気記号を数値に変換する
+    def to_number(element):
+        if type(element) is str:
+            if ')' in element:
+                value = element.replace(')', '')
+            elif ']' in element:
+                value = element.replace(']', '')
+            else:
+                value = element
+        else:
+            value = element
+            
+        return value
+
+    # 天気を整数値に変換する
+    for col in df.columns:
+        new_df[col] = new_df[col].map(lambda element : to_number(element))
+    
+    return new_df
 
 ##################################################
 # 風速・風向きをX,Y方向のベクトルに変換する(地上気象データ用)
@@ -286,7 +340,7 @@ def classify_weather_boundary(df, boudaries=None, colums=None, inplace=True):
 ##################################################
 # 天気を指定したマップで置換する
 ##################################################
-def replace_weather(df, rmap=None, columns=None, inplace=True):
+def replace_weather(df, rmap=None, columns=None, mode=WeatherConvertMode.Coarse, inplace=True):
     """ 天気を指定したマップで置換する
 
     Args:
@@ -307,7 +361,10 @@ def replace_weather(df, rmap=None, columns=None, inplace=True):
     
     # 境界値が未設定の場合はデフォルト値を使用する
     if rmap is None:
-        rmap = __WEATHER_REPLACE_MAP_COARSE
+        if mode == WeatherConvertMode.Fine:
+            rmap = __WEATHER_REPLACE_MAP_FINE
+        else:
+            rmap = __WEATHER_REPLACE_MAP_COARSE
     
     # 列名が未設定の場合は、名称に天気を含む列を抽出する
     if columns is None:
