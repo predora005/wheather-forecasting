@@ -79,6 +79,16 @@ def get_ground_weather(input_dir):
         else:
             ground_df = pd.merge(ground_df, df, on=('日付','時'))
     
+    # 日付と時の列を先頭に移動する
+    ground_df = move_datetime_column_to_top(ground_df)
+    
+    #new_columns = ['日付', '時']
+    #for col in ground_df.columns:
+    #    if (col != '日付') and (col != '時'):
+    #        new_columns.append(col)
+    #
+    #ground_df = ground_df.loc[:, new_columns]
+    
     return ground_df
     
     
@@ -196,4 +206,28 @@ def get_highrise_weather(input_dir):
         else:
             highrise_df = pd.merge(highrise_df, df, on=('日付','時'))
     
+    # 日付と時の列を先頭に移動する
+    highrise_df = move_datetime_column_to_top(highrise_df)
+    
     return highrise_df
+    
+##################################################
+# 日付・時刻の列を先頭に移動する
+##################################################
+def move_datetime_column_to_top(df):
+    """ 日付・時刻の列を先頭に移動する
+
+    Args:
+        df(DataFrame) : 変換対象のDataFrame
+
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    new_columns = ['日付', '時']
+    for col in df.columns:
+        if (col != '日付') and (col != '時'):
+            new_columns.append(col)
+    
+    new_df = df.loc[:, new_columns]
+    
+    return new_df

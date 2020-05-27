@@ -38,9 +38,14 @@ def get_ground_weather():
     cwd = os.getcwd()
 
     # 地上気象データを取得する
-    ground_dir = os.path.join(cwd, 'ground_weather')
-    ground_df = wfile.get_ground_weather(ground_dir)
-    ground_df.to_csv('ground1.csv')
+    ground_weather_csv = 'ground_weather.csv'
+    if os.path.isfile(ground_weather_csv):
+        ground_df = pd.read_csv(ground_weather_csv, index_col=0, parse_dates=[1])
+        
+    else:
+        ground_dir = os.path.join(cwd, 'ground_weather')
+        ground_df = wfile.get_ground_weather(ground_dir)
+        ground_df.to_csv(ground_weather_csv)
     
     # 地上気象データからNaNが含まれる列を削る
     ground_df = wdfproc.drop_ground(ground_df)
@@ -59,17 +64,25 @@ def get_ground_weather():
     ground_df.to_csv('ground5.csv')
     
     # 天気を指定した境界値で分類する
-    ground_df = wdfproc.classify_weather(ground_df)
+    #  - 水戸は3分割、それ以外は○分割にする
+    weather_cols = [col for col in ground_df.columns if('天気' in col)]
+    #idx = weather_cols.index('Mito_天気') 
+    #print(idx)
+    weather_cols.pop( weather_cols.index('Mito_天気') )
+    #print(weather_cols)
+    ground_df = wdfproc.replace_weather(ground_df, columns=weather_cols)
     ground_df.to_csv('ground6.csv')
+    ground_df = wdfproc.replace_weather(ground_df, columns=['Mito_天気'])
+    ground_df.to_csv('ground7.csv')
     
     # 浮動小数点数を32ビットに変換する
     ground_df = wdfproc.type_to_float32(ground_df)
-    ground_df.to_csv('ground7.csv')
+    ground_df.to_csv('ground8.csv')
     
     # 不要な列を除去する
     ground_df = remove_cols(
         ground_df, 
-        [ '海面気圧', '気温', '露点温度', '蒸気圧', '日照時間', 
+        [ '現地気圧', '海面気圧', '気温', '露点温度', '蒸気圧', '日照時間', 
           '降雪', '積雪', '雲量', '視程', '全天日射', '降水量', '風速' ]
     )
 
@@ -86,9 +99,13 @@ def get_highrise_weather():
     cwd = os.getcwd()
     
     # 高層気象データを取得する
-    highrise_dir = os.path.join(cwd, 'highrise_weather')
-    highrise_df = wfile.get_highrise_weather(highrise_dir)
-    highrise_df.to_csv('highrise1.csv')
+    highrise_weather_csv = 'highrise_weather.csv'
+    if os.path.isfile(highrise_weather_csv):
+        highrise_df = pd.read_csv(highrise_weather_csv, index_col=0, parse_dates=[1])
+    else:
+        highrise_dir = os.path.join(cwd, 'highrise_weather')
+        highrise_df = wfile.get_highrise_weather(highrise_dir)
+        highrise_df.to_csv(highrise_weather_csv)
     
     # 高層気象データから不要データを除去する
     #highrise_df = wdfproc.drop_higirise(highrise_df)
@@ -97,6 +114,10 @@ def get_highrise_weather():
     # 風速・風向きを数値に変換する
     highrise_df = wdfproc.convert_wind_to_vector_highrise(highrise_df)
     highrise_df.to_csv('highrise2.csv')
+    
+    # 浮動小数点数を32ビットに変換する
+    highrise_df = wdfproc.type_to_float32(highrise_df)
+    highrise_df.to_csv('highrise3.csv')
     
     # 不要な列を除去する
     highrise_df = remove_cols(
@@ -204,20 +225,20 @@ if __name__ == '__main__':
     dot_data = export_graphviz(
         model.estimators_[0], 
         feature_names=train_x.columns,
-        class_names=['Sunny', 'Cloud', 'Rain'],  
+        class_names=['Sunny', 'Cloud', 'Rain', 'Other'],  
         filled=True, 
         rounded=True)
     graph = pydotplus.graph_from_dot_data( dot_data )
     graph.write_png('tree_graphviz.png')
     
-    fig = plt.figure(figsize=(100, 50))
-    ax = fig.add_subplot()
-    plot_tree(
-        model.estimators_[0], 
-        feature_names=train_x.columns,
-        ax=ax, 
-        class_names=['Sunny', 'Cloud', 'Rain'],
-        filled=True
-    )
+    #fig = plt.figure(figsize=(100, 50))
+    #ax = fig.add_subplot()
+    #plot_tree(
+    #    model.estimators_[0], 
+    #    feature_names=train_x.columns,
+    #    ax=ax, 
+    #    class_names=['Sunny', 'Cloud', 'Rain', 'Other'],
+    #    filled=True
+    #)
     #plt.savefig('tree_plt.png', bbox_inches='tight')
     

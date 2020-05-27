@@ -1,10 +1,12 @@
 # coding: utf-8
 
 import math
+from enum import Enum
 import numpy as np
 import pandas as pd
 import re
 
+# 風向きをラジアンに変換するマップ
 __WIND_DIRECTION_TO_ANGLE_MAP = {
     '東'    : 0.0,              '東北東': math.pi * 1 / 8,  '北東'  : math.pi * 2 / 8,
     '北北東': math.pi * 3 / 8,  '北'    : math.pi * 4 / 8,  '北北西': math.pi * 5 / 8,
@@ -15,6 +17,12 @@ __WIND_DIRECTION_TO_ANGLE_MAP = {
     #'×'     : 0.0
 }
 
+# 天気を変換する際のモード
+#class WeatherConvertMode(Enum):
+#    Coarse = 1  # 粗い
+#    Fine = 2    # 細かい
+
+# 天気を整数値に変換するマップ
 __WEATHER_TO_INT_MAP = {
     '快晴'  : 1, 
     '晴れ'  : 2,
@@ -42,6 +50,21 @@ __WEATHER_TO_INT_MAP = {
     '降水またはしゅう雨性の降水'    : 101,
 }
 
+# 天気を分類するマップ
+__WEATHER_REPLACE_MAP_COARSE = {
+    1:  0, 2:  0,           # 快晴, 晴れ    -> 晴れ
+    3:  1, 4:  1,           # 薄曇, 曇り    -> くもり
+    8:  2, 9:  2, 10: 2,    # 霧, 霧雨, 雨                  -> 雨
+    11: 2, 12: 2, 13: 2,    # みぞれ, 雪, あられ            -> 雨
+    14: 2, 16: 2, 17: 2,    # ひょう, しゅう雨, 着氷性の雨  -> 雨
+    18: 2, 19: 2, 22: 2,    # 着氷性の霧雨, しゅう雪, 霧雪  -> 雨
+    23: 2, 24: 2, 28: 2,    # 凍雨, 細氷, もや              -> 雨
+    101:2,                  # 降水, 細氷, もや              -> 雨
+    5:  3, 6:  3, 7:  3,    # 煙霧, 砂じん嵐, 地ふぶき  -> その他
+    15: 3, 0:  3            # 雷, 不明                   -> その他
+}
+
+# 雲量を浮動小数点数に変換するマップ
 __CLOUD_VOLUME_TO_FLOAT_MAP = {
     '0+'  : 0.5, 
     '10-' : 9.5,
@@ -130,11 +153,11 @@ def convert_weather_to_interger(df, inplace=True):
 
     # 天気を整数値に変換する関数
     def to_integer(name):
-        value = 0.0
+        value = 0
         if name in __WEATHER_TO_INT_MAP:
             value = __WEATHER_TO_INT_MAP[name]
         else:
-            value = 0.0
+            value = 0
         return value
 
     # 天気を整数値に変換する
@@ -210,12 +233,13 @@ def type_to_float32(df, inplace=True):
 ##################################################
 # 天気を指定した境界値で分類する
 ##################################################
-def classify_weather(df, boudaries=None, inplace=True):
+def classify_weather_boundary(df, boudaries=None, colums=None, inplace=True):
     """ 天気を指定した境界値で分類する
 
     Args:
         df(DataFrame)   : 変換対象のDataFrame
         boudaries(List) : 境界値のリスト
+        columns(List)   : 変換対象の列名
         inplace(bool)   : 元のDataFrameを変更するか否か
 
     Returns:
@@ -246,14 +270,55 @@ def classify_weather(df, boudaries=None, inplace=True):
             class_value = len(boudaries)
         
         return class_value
-
-    # 名称に天気を含む列を抽出する
-    weather_cols = [col for col in new_df.columns if('天気' in col)]
+    
+    # 列名が未設定の場合は、名称に天気を含む列を抽出する
+    if colums is None:
+        weather_cols = [col for col in new_df.columns if('天気' in col)]
+    else:
+        weather_cols = colums
     
     # 天気を指定した境界値で分類する
     for col in weather_cols:
         new_df[col] = new_df[col].map(lambda col : classify(col))
     
+    return new_df
+
+##################################################
+# 天気を指定したマップで置換する
+##################################################
+def replace_weather(df, rmap=None, columns=None, inplace=True):
+    """ 天気を指定したマップで置換する
+
+    Args:
+        df(DataFrame)   : 変換対象のDataFrame
+        rmap(Dict)      : 変換用のマップ
+        columns(List)   : 変換対象の列名
+        inplace(bool)   : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    
+    # 元のDataFrameを上書きするか否か
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    # 境界値が未設定の場合はデフォルト値を使用する
+    if rmap is None:
+        rmap = __WEATHER_REPLACE_MAP_COARSE
+    
+    # 列名が未設定の場合は、名称に天気を含む列を抽出する
+    if columns is None:
+        weather_cols = [col for col in new_df.columns if('天気' in col)]
+    else:
+        weather_cols = columns
+    
+    # 天気を指定したマップで置換する
+    for col in weather_cols:
+        new_df = new_df.replace({col: rmap})
+
     return new_df
 
 ##################################################
@@ -297,11 +362,9 @@ def convert_wind_to_vector_highrise(df, inplace=True):
 
     # 風向き・風速を、X,Y方向の風速に変換する
     for radian_col in wind_radian_cols:
-        print(radian_col)
         result = re.search(r"(.+)_風向.*\(rad\)", radian_col)
         prifix = result.group(1)
         speed_col = prifix + '_' + '風速(m/s)'
-        print(speed_col)
         new_df = new_df.astype({speed_col: float})
         
         wind_x_col = prifix + '_' + '風速(m/s)_X'
