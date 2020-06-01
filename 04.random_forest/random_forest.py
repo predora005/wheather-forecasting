@@ -84,8 +84,10 @@ def get_ground_weather():
     # 不要な列を除去する
     ground_df = remove_cols(
         ground_df, 
+#        [ '現地気圧', '海面気圧', '気温', '露点温度', '蒸気圧', '日照時間', 
+#          '降雪', '積雪', '雲量', '視程', '全天日射', '降水量', '風速' ]
         [ '現地気圧', '海面気圧', '気温', '露点温度', '蒸気圧', '日照時間', 
-          '降雪', '積雪', '雲量', '視程', '全天日射', '降水量', '風速' ]
+          '降雪', '積雪', '雲量', '視程', '全天日射', '降水量' ]
     )
 
     print(ground_df.info())
@@ -124,7 +126,7 @@ def get_highrise_weather():
     # 不要な列を除去する
     highrise_df = remove_cols(
         highrise_df, 
-        [ '高度', '気温', '風速', '1000', '925', '900', '850', '700', '500']
+        [ '高度', '1000', '925', '900', '800', '600', '400']
     )
 
     print(highrise_df.info())
@@ -208,7 +210,7 @@ if __name__ == '__main__':
     train_x, train_y, test_x, test_y = make_training_data(df, 'Mito_天気')
     
     # ランダムフォレストの学習モデルを生成する
-    model = RandomForestClassifier(n_estimators=500, max_depth=20, random_state=1)
+    model = RandomForestClassifier(n_estimators=1000, max_depth=20, random_state=1)
     
     # 学習データで学習を行う
     model.fit(train_x, train_y)
