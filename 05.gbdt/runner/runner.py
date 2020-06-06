@@ -4,37 +4,86 @@ from .abs_runner import AbsRunner
 import os
 import wfile
 import wdfproc
-import numpy as np
+import util
 import pandas as pd
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-#from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score
+from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 mpl.font_manager._rebuild() #キャッシュの削除
 plt.rcParams['font.family'] = 'IPAGothic' # インストールしたフォントを指定
 
-import pydotplus
-from sklearn.tree import export_graphviz, plot_tree
-
-
+##################################################
+# 学習・評価・予測 実行クラス
+##################################################
 class Runner(AbsRunner):
+    """学習・評価・予測 実行クラス
+        
+    Attributes:
+        属性の名前 (属性の型): 属性の説明
+        属性の名前 (:obj:`属性の型`): 属性の説明.
+    """
     
+    ##################################################
+    # コンストラクタ
+    ##################################################
     def __init__(self, run_name, model, params):
+        
         # 抽象クラスのコンストラクタ
         super(Runner, self).__init__(run_name, model, params)
         
         # データ読み込み済みフラグ
         self.is_data_loaded = False
-
+        
+        # 学習・予測用データ
+        self.train_x = None
+        self.train_y = None
+        self.test_x = None
+        self.test_y = None
+        
+        # クラス名
+        self.class_names=['Sunny', 'Cloud', 'Rain', 'Other']
+        
+    ##################################################
+    # foldを指定して学習・評価を行う
+    ##################################################
     def run_train_fold(self, fold):
         raise NotImplementedError()
 
+    ##################################################
+    # クロスバリデーションで学習・評価を行う
+    ##################################################
     def run_train_cv(self):
-        raise NotImplementedError()
         
+        # データをロードする
+        self.load_data()
+        
+        #fold = StratifiedKFold(n_splits=3)
+        fold = KFold(n_splits=3)
+        for i, (train_index, test_index) in enumerate(fold.split(self.train_x, self.train_y)):
+            
+            # 訓練データを抽出する
+            tx = self.train_x.iloc[train_index]
+            ty = self.train_y.iloc[train_index]
+            
+            # 検証データを抽出する
+            vx = self.train_x.iloc[test_index]
+            vy = self.train_y.iloc[test_index]
+            
+            # 学習を行う
+            self.model.train(tx, ty)
+            
+            # 予測を行う
+            pred_y = self.model.predict(vx) 
+            
+            # 評価結果を出力する
+            run_fold_name = '{0:s}_fold_{1:02d}'.format(self.run_name, i) 
+            print('#################################')
+            print('  {0:s}'.format(run_fold_name))
+            print('#################################')
+            util.print_accuracy(vy, pred_y, self.class_names)
+            
     def run_predict_cv(self):
         raise NotImplementedError()
         
@@ -42,11 +91,25 @@ class Runner(AbsRunner):
         self.load_data()
         self.model.train(self.train_x, self.train_y)
     
+    ##################################################
+    # 学習データ全てを学習したモデルで、テストデータの予測を行う
+    ##################################################
     def run_predict_all(self):
+        
+        # データをロードする
         self.load_data()
+        
         pred_y = self.model.predict(self.test_x)
         self.pred_y = pred_y
         
+        print('#################################')
+        print('  {0:s}'.format(self.run_name))
+        print('#################################')
+        util.print_accuracy(self.test_y, pred_y, self.class_names)
+        
+    ##################################################
+    # 学習・評価・予測用のデータをロードする
+    ##################################################
     def load_data(self):
         
         # データ未読み込みの場合
@@ -70,7 +133,6 @@ class Runner(AbsRunner):
                 
             self.is_data_loaded = True
 
-
     ##################################################
     # 地上気象データ取得
     ##################################################
@@ -78,9 +140,12 @@ class Runner(AbsRunner):
         
         # カレントディレクトリを取得する
         cwd = os.getcwd()
+        
+        # tempディレクトリを作成する
+        os.makedirs('temp', exist_ok=True)
     
         # 地上気象データを取得する
-        ground_weather_csv = 'ground_weather.csv'
+        ground_weather_csv = 'temp/ground_weather.csv'
         if os.path.isfile(ground_weather_csv):
             ground_df = pd.read_csv(ground_weather_csv, index_col=0, parse_dates=[1])
             
@@ -146,8 +211,11 @@ class Runner(AbsRunner):
         # カレントディレクトリを取得する
         cwd = os.getcwd()
         
+        # tempディレクトリを作成する
+        os.makedirs('temp', exist_ok=True)
+        
         # 高層気象データを取得する
-        highrise_weather_csv = 'highrise_weather.csv'
+        highrise_weather_csv = 'temp/highrise_weather.csv'
         if os.path.isfile(highrise_weather_csv):
             highrise_df = pd.read_csv(highrise_weather_csv, index_col=0, parse_dates=[1])
         else:
@@ -212,29 +280,9 @@ class Runner(AbsRunner):
         feature_importances.plot(kind='bar', figsize=(20,20))
         plt.savefig('feature_importances.png', bbox_inches='tight')
         
-        feature_importances.to_csv('feature_importances.csv')
+        # tempディレクトリを作成する
+        os.makedirs('result', exist_ok=True)
+        
+        feature_importances.to_csv('result/feature_importances.csv')
 
 
-    ##################################################
-    # 正解率を表示する
-    ##################################################
-    def print_accuracy(self):
-        
-        test_y, pred_y = self.test_y, self.pred_y
-        
-        # 正解率を表示する
-        acc = accuracy_score(test_y, pred_y)
-        print('Score:{0:.4f}'.format(acc))
-        
-        idx_sunny = np.where(test_y.values == 0)[0]
-        acc_sunnny = accuracy_score(test_y.iloc[idx_sunny], pred_y[idx_sunny])
-        print('Score(sunny):{0:.4f}'.format(acc_sunnny))
-        
-        idx_cloudy = np.where(test_y.values == 1)[0]
-        acc_cloudy= accuracy_score(test_y.iloc[idx_cloudy], pred_y[idx_cloudy])
-        print('Score(cloudy):{0:.4f}'.format(acc_cloudy))
-        
-        idx_rain = np.where(test_y.values == 2)[0]
-        acc_rain= accuracy_score(test_y.iloc[idx_rain], pred_y[idx_rain])
-        print('Score(rain):{0:.4f}'.format(acc_rain))
-    

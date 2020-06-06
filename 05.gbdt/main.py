@@ -2,17 +2,25 @@
 
 from model import ModelRandomForest
 from runner import Runner
+from sklearn.model_selection import StratifiedKFold
 
 ##################################################
 # メイン
 ##################################################
 if __name__ == '__main__':
     
-    model = ModelRandomForest('random_forest_test', None)
+    run_name = 'Random Forest'
     
-    runner = Runner('Random Forest', model, None)
+    # モデル生成
+    model = ModelRandomForest(run_name, None)
+        
+    # Runner生成
+    runner = Runner(run_name, model, None)
     
-    # 学習を行う
+    # クロスバリデーション実行
+    runner.run_train_cv()
+    
+    # 学習実行
     runner.run_train_all()
     
     # 特徴量の重要度を可視化する
@@ -22,7 +30,7 @@ if __name__ == '__main__':
     runner.run_predict_all()
     
     # 正解率を表示する
-    runner.print_accuracy()
+    #runner.print_accuracy()
     
     #dot_data = export_graphviz(
     #    model.estimators_[0], 
