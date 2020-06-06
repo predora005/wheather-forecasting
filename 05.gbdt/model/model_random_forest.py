@@ -57,4 +57,10 @@ class ModelRandomForest(AbsModel):
     def get_feature_importances(self):
         return self.model.feature_importances_
         
+    ##################################################
+    # 推定器を返す
+    ##################################################
+    def get_estimators(self):
+        return self.model.estimators
+        
         

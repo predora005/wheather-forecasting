@@ -6,13 +6,14 @@ from sklearn.tree import export_graphviz, plot_tree
 ##################################################
 # Graphvizのグラフをファイルに出力する
 ##################################################
-def export_graphviz(file_name, estimators, feature_names, class_names):
+def export_graphviz(file_path, estimators, feature_names, class_names):
     """ Graphvizのグラフをファイルに出力する
 
     Args:
-        file_name(string)               : ファイル名
-        feature_names(list of string)   : 特徴量の名称リスト
-        class_names(list of string)     : クラス名のリスト
+        file_path(string)                   : 出力先ファイルパス
+        estimators(DecisionTreeClassifier)  : 推定器
+        feature_names(list of string)       : 特徴量の名称リスト
+        class_names(list of string)         : クラス名のリスト
     """
     dot_data = export_graphviz(
         estimators, 
@@ -21,5 +22,5 @@ def export_graphviz(file_name, estimators, feature_names, class_names):
         filled=True, 
         rounded=True)
     graph = pydotplus.graph_from_dot_data( dot_data )
-    graph.write_png(file_name)
+    graph.write_png(file_path)
     

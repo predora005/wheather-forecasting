@@ -2,8 +2,9 @@
 
 from .abs_runner import AbsRunner
 import os
-import wfile
+#import wfile
 import wdfproc
+from loader import Loader
 import util
 import pandas as pd
 
@@ -41,6 +42,12 @@ class Runner(AbsRunner):
         self.train_y = None
         self.test_x = None
         self.test_y = None
+        
+        # ディレクトリ名
+        self.base_dir = os.getcwd()
+        self.temp_dir = 'temp'
+        self.input_dir = 'input2'
+        self.output_dir = 'output'
         
         # クラス名
         self.class_names=['Sunny', 'Cloud', 'Rain', 'Other']
@@ -115,14 +122,9 @@ class Runner(AbsRunner):
         # データ未読み込みの場合
         if not (self.is_data_loaded):
         
-            # 地上気象データを取得する
-            gdf = self.get_ground_weather()
-            
-            # 高層気象データを取得する
-            hdf = self.get_highrise_weather()
-            
-            # 地上気象データと高層気象データをマージする
-            df = pd.merge(gdf, hdf, on=('日付','時'))
+            # 気象データを読み込み
+            loader = Loader(self.base_dir, self.temp_dir, self.input_dir)
+            df = loader.load()
             
             # NaNを置換する
             df = df.fillna(-9999)
@@ -132,120 +134,7 @@ class Runner(AbsRunner):
                 self.make_training_data(df, 'Mito_天気')
                 
             self.is_data_loaded = True
-
-    ##################################################
-    # 地上気象データ取得
-    ##################################################
-    def get_ground_weather(self):
-        
-        # カレントディレクトリを取得する
-        cwd = os.getcwd()
-        
-        # tempディレクトリを作成する
-        os.makedirs('temp', exist_ok=True)
-    
-        # 地上気象データを取得する
-        ground_weather_csv = 'temp/ground_weather.csv'
-        if os.path.isfile(ground_weather_csv):
-            ground_df = pd.read_csv(ground_weather_csv, index_col=0, parse_dates=[1])
             
-        else:
-            ground_dir = os.path.join(cwd, 'ground_weather')
-            ground_df = wfile.get_ground_weather(ground_dir)
-            ground_df.to_csv(ground_weather_csv)
-            
-        # 天気記号を数値に変換する
-        ground_df = wdfproc.convert_symbol_to_number(ground_df)
-        
-        # 地上気象データからNaNが含まれる列を削る
-        ground_df = wdfproc.drop_unneeded_ground(ground_df)
-        ground_df.to_csv('ground2.csv')
-        
-        # 風速・風向きを数値に変換する
-        ground_df = wdfproc.convert_wind_to_vector_ground(ground_df)
-        ground_df.to_csv('ground3.csv')
-        
-        # 天気を数値に変換する
-        ground_df = wdfproc.convert_weather_to_interger(ground_df)
-        ground_df.to_csv('ground4.csv')
-        
-        # 雲量を浮動小数点数に変換する
-        ground_df = wdfproc.convert_cloud_volume_to_float(ground_df)
-        ground_df.to_csv('ground5.csv')
-        
-        # 天気を指定した境界値で分類する
-        #  - 水戸は3分割、それ以外は○分割にする
-        weather_cols = [col for col in ground_df.columns if('天気' in col)]
-        weather_cols.pop( weather_cols.index('Mito_天気') )
-        ground_df = wdfproc.replace_weather(
-                            ground_df, columns=weather_cols, 
-                             mode=wdfproc.WeatherConvertMode.Coarse)
-        ground_df.to_csv('ground6.csv')
-        ground_df = wdfproc.replace_weather(ground_df, columns=['Mito_天気'])
-        ground_df.to_csv('ground7.csv')
-        
-        # 浮動小数点数を32ビットに変換する
-        ground_df = wdfproc.type_to_float32(ground_df)
-        ground_df.to_csv('ground8.csv')
-        
-        # 不要な列を除去する
-        ground_df = wdfproc.drop_columns(
-            ground_df, 
-            #[ '現地気圧', '海面気圧', '気温', '露点温度', '蒸気圧', '日照時間', 
-            #  '降雪', '積雪', '雲量', '視程', '全天日射', '降水量', '風速' ]
-            [ '現地気圧', '海面気圧', '気温', '露点温度', '蒸気圧', '日照時間', 
-              '降雪', '積雪', '雲量', '視程', '全天日射', '降水量' ]
-        )
-        ground_df.to_csv('ground9.csv')
-    
-        print(ground_df.info())
-    
-        return ground_df
-        
-    
-    ##################################################
-    # 高層気象データ取得
-    ##################################################
-    def get_highrise_weather(self):
-        
-        # カレントディレクトリを取得する
-        cwd = os.getcwd()
-        
-        # tempディレクトリを作成する
-        os.makedirs('temp', exist_ok=True)
-        
-        # 高層気象データを取得する
-        highrise_weather_csv = 'temp/highrise_weather.csv'
-        if os.path.isfile(highrise_weather_csv):
-            highrise_df = pd.read_csv(highrise_weather_csv, index_col=0, parse_dates=[1])
-        else:
-            highrise_dir = os.path.join(cwd, 'highrise_weather')
-            highrise_df = wfile.get_highrise_weather(highrise_dir)
-            highrise_df.to_csv(highrise_weather_csv)
-        
-        # 高層気象データから不要データを除去する
-        #highrise_df = wdfproc.drop_unneeded_higirise(highrise_df)
-        #highrise_df.to_csv('highrise2.csv')
-        
-        # 風速・風向きを数値に変換する
-        highrise_df = wdfproc.convert_wind_to_vector_highrise(highrise_df)
-        highrise_df.to_csv('highrise2.csv')
-        
-        # 浮動小数点数を32ビットに変換する
-        highrise_df = wdfproc.type_to_float32(highrise_df)
-        highrise_df.to_csv('highrise3.csv')
-        
-        # 不要な列を除去する
-        highrise_df = wdfproc.drop_columns(
-            highrise_df, 
-            [ '高度', '1000', '925', '900', '800', '600', '400']
-        )
-        highrise_df.to_csv('highrise4.csv')
-    
-        print(highrise_df.info())
-        
-        return highrise_df
-        
     ##################################################
     # 学習データ作成
     ##################################################
@@ -255,15 +144,17 @@ class Runner(AbsRunner):
         
         data_x = df.drop(columns=[y_name, ])
         data_y = df[y_name]
-    
+        
         # Xデータから末尾(最新時刻)のデータを削る
         data_x = data_x.iloc[:-1,]
-    
+        
         # Yデータから先頭(最旧時刻)のデータを削る
         data_y = data_y.iloc[1:,]
-    
-        train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=True)
-    
+        
+        # 訓練データとテストデータに分割する
+        #train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=True)
+        train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=False, test_size=0.33)
+        
         return train_x, train_y, test_x, test_y
     
     ##################################################
@@ -278,11 +169,26 @@ class Runner(AbsRunner):
         feature_importances = pd.DataFrame(importances, index=train_x.columns, columns=['Importance'])
         feature_importances = feature_importances.sort_values(by='Importance', ascending=False)
         feature_importances.plot(kind='bar', figsize=(20,20))
-        plt.savefig('feature_importances.png', bbox_inches='tight')
         
-        # tempディレクトリを作成する
-        os.makedirs('result', exist_ok=True)
+        # 出力ディレクトリを作成する
+        output_dir = os.path.join(self.base_dir, self.output_dir)
+        os.makedirs(output_dir, exist_ok=True)
         
-        feature_importances.to_csv('result/feature_importances.csv')
+        fig_name = os.path.join(output_dir, 'feature_importances.png')
+        plt.savefig(fig_name, bbox_inches='tight')
+        
+        csv_name = os.path.join(output_dir, 'feature_importances.csv')
+        feature_importances.to_csv(csv_name)
 
-
+    ##################################################
+    # Graphvizのグラフをファイルに出力する
+    ##################################################
+    def export_graphviz(self):
+        
+        file_path = os.path.join(self.base_dir, self.output_dir, 'graphviz.png')
+        estimators = self.model.get_estimators()[0] 
+        feature_names = self.train_x.columns,
+        class_names = self.class_names
+    
+        util.export_graphviz(file_path, estimators, feature_names, class_names)
+        
