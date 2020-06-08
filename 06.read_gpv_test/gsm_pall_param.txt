@@ -1,0 +1,6 @@
+31:Geopotential Height:gpm (instant):regular_ll:isobaricInhPa:level 85000.0 Pa:fcst time 0 hrs:from 201701011200
+32:U component of wind:m s**-1 (instant):regular_ll:isobaricInhPa:level 85000.0 Pa:fcst time 0 hrs:from 201701011200
+33:V component of wind:m s**-1 (instant):regular_ll:isobaricInhPa:level 85000.0 Pa:fcst time 0 hrs:from 201701011200
+34:Temperature:K (instant):regular_ll:isobaricInhPa:level 85000.0 Pa:fcst time 0 hrs:from 201701011200
+35:Vertical velocity:Pa s**-1 (instant):regular_ll:isobaricInhPa:level 85000.0 Pa:fcst time 0 hrs:from 201701011200
+36:Relative humidity:% (instant):regular_ll:isobaricInhPa:level 85000.0 Pa:fcst time 0 hrs:from 201701011200

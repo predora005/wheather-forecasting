@@ -75,7 +75,7 @@ def get_msm_mandatory_levels():
 # GSMの指定気圧面を取得する
 ##################################################
 def get_gsm_mandatory_levels():
-    return [850, 700, 500]
+    return [850, 500]
     
 ##################################################
 # GSMの緯度,経度の範囲
@@ -83,9 +83,10 @@ def get_gsm_mandatory_levels():
 def get_gsm_latlons():
     #   和歌山〜福島 (34,135)〜(38,141)
     #   静岡〜いわき (35,138)〜(37,141)
+    #   沼津〜日立 (35,138.8)〜(36.6,140.7)
     # lat_min, lat_max, lon_min, lon_max
     
-    return (35, 37, 138, 141)
+    return (35, 36.7, 138.7, 140.8)
 
 ##################################################
 # パラメータ名を日本語に変換する
@@ -116,35 +117,43 @@ def paramet_name_to_japanese(param_name):
         return param_name_dict[param_name]
     else:
         return None
-
-##################################################
-# 浮動小数点を32ビットに変更する
-##################################################
-def type_to_float32(df, inplace=True):
-    """ 浮動小数点を32ビットに変更する
-
-    Args:
-        df(DataFrame) : 変換対象のDataFrame
-        inplace(bool) : 元のDataFrameを変更するか否か
-
-    Returns:
-        DataFrame : 変換後のDataFrame
-    """
-    if inplace:
-        new_df = df
-    else:
-        new_df = df.copy()
-    
-    for col in new_df.columns:
-        typ = new_df[col].dtype
-        if typ == object:
-            # object -> np.float32
-            new_df = new_df.astype({col: np.float32})
-        elif typ == np.float64:
-            # np.float64 -> np.float32
-            new_df = new_df.astype({col: np.float32})
         
-    return new_df
+##################################################
+# GSM地表データの中で、指定したパラメータが重要か否かを返す
+##################################################
+def is_parameter_important_in_gsm_surf(param_name):
+    
+    param_important = [
+        'Pressure reduced to MSL'       ,   # 海面更正気圧
+#        'Pressure'                      ,   # 地上気圧
+#        '10 metre U wind component'     ,   # 東西風
+#        '10 metre V wind component'     ,   # 南北風
+        '2 metre temperature'           ,   # 気温
+        '2 metre relative humidity'     ,   # 相対湿度
+#        'Low cloud cover'               ,   # 下層雲量
+        'Medium cloud cover'            ,   # 中層雲量
+#        'High cloud cover'              ,   # 上層雲量
+        'Total cloud cover'             ,   # 全雲量
+        'Total precipitation'           ,   # 積算降水量
+    ]
+    
+    return param_name in param_important
+    
+##################################################
+# GSM指定気圧面データの中で、指定したパラメータが重要か否かを返す
+##################################################
+def is_parameter_important_in_gsm_pall(param_name):
+    
+    param_important = [
+#        'Geopotential height'           ,   # 高度
+#        'u-component of wind'           ,   # 東西風
+#        'v-component of wind'           ,   # 南北風
+        'Temperature'                   ,   # 気温
+        'Vertical velocity (pressure)'  ,   # 上昇流
+        'Relative humidity'             ,   # 相対湿度
+    ]
+    
+    return param_name in param_important
     
 ##################################################
 # GSMの過去データをダウンロードする
@@ -155,13 +164,13 @@ def download_gsm_files(output_dir, start_year, start_month, start_day, days):
     os.makedirs(output_dir, exist_ok=True)
     
     # 取得を開始する年月日を設定
-    date = datetime.date(start_year, start_month, start_day)
+    start_date = datetime.date(start_year, start_month, start_day)
     
     # 初期時刻(UTC)
     initial_hours = get_gsm_initial_hours()
     
     # 指定した日数分のデータをダウンロードする
-    days = 1    # 取得するデータの日数
+    date = start_date
     for i in range(days):
         
         # 年月日を取得
@@ -173,7 +182,10 @@ def download_gsm_files(output_dir, start_year, start_month, start_day, days):
             
             # 日を跨いだらdayを1加算する
             if hh == 0:
-                day = day + 1
+                tmp_date = date + datetime.timedelta(days=1)
+                year = tmp_date.year
+                month = tmp_date.month
+                day = tmp_date.day
             
             # ファイル名を取得する
             filenames = [
@@ -203,13 +215,22 @@ def download_gsm_files(output_dir, start_year, start_month, start_day, days):
 ##################################################
 # GSMの指定気圧面データをGRIB2からCSVに変換する
 ##################################################
-def gsm_pall_grib2_to_csv(input_dir, output_dir, date):
+def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
     
     # 年月日を取得
-    year = date.year
-    month = date.month
-    day = date.day
-        
+    year = start_date.year
+    month = start_date.month
+    day = start_date.day
+    
+    # 出力ファイル名
+    output_filename = 'GSM_pall_{0:04d}_{1:02d}_{2:02d}.csv'.format(
+        start_date.year, start_date.month, start_date.day)
+    output_filepath = os.path.join(output_dir, output_filename)
+    
+    # ファイルが存在する場合は終了
+    if os.path.isfile(output_filepath):
+        return
+    
     # 格納用のDataFrameを用意する
     hh_df = None
     
@@ -218,30 +239,42 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, date):
         
         # 日を跨いだらdayを1加算する
         if hh == 0:
-            day = day + 1
-        
+            date = start_date + datetime.timedelta(days=1)
+            year = date.year
+            month = date.month
+            day = date.day
+            
         # ファイル名を取得する
         filename = get_gsm_pall_file_name(year, month, day, hh)
         filepath = os.path.join(input_dir, filename)
         
         # GRIB2ファイルを読み込む
         grbs = pygrib.open(filepath)
+        #print(grbs.select(level=500))
         
         # 列名リストとndarrayを準備する
         column_names = []
-        values_array = np.empty(0, dtype=np.float32)
+        values_array = np.empty(0)
         
         # 指定気圧面のデータを取り出す
         levels = get_gsm_mandatory_levels()
         for level in levels:
             
             # 指定気圧面のデータを取り出す
+            #print(level, filepath)
             plane_data = grbs.select(level=level, forecastTime=0)
             
             # 指定気圧面のうち学習に用いるデータのみを取り出し、
             # values_arrayに追加する
             for data in plane_data:
                 
+                # 重要パラメータかを判定し、重要でないパラメータはCSVに出力しない
+                if is_parameter_important_in_gsm_pall(data.parameterName):
+                    pass
+                else:
+                    continue
+            
+                # パラメータ名を日本語に変換する
                 param_name = paramet_name_to_japanese(data.parameterName)
                 if param_name is None:
                     continue
@@ -281,28 +314,34 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, date):
             hh_df = hh_df.append(df, ignore_index=True)
     
     # 日付のデータを追加する
-    hh_df['日付'] = date
-    
-    print(hh_df.info())
-    
-    # 出力ファイル名
-    filename = 'GSM_pall_{0:04d}_{1:02d}_{2:02d}.csv'.format(date.year, date.month, date.day)
-    filepath = os.path.join(output_dir, filename)
+    hh_df['日付'] = start_date
     
     # 1日分のデータをCSVファイルに出力する
     hh_df = move_datetime_column_to_top(hh_df)
-    hh_df.to_csv(filepath)
-
+    hh_df.to_csv(output_filepath)
+    
+    print(output_filepath)
+    #print(hh_df.info())
+    
 ##################################################
 # GSMの地表データをGRIB2からCSVに変換する
 ##################################################
-def gsm_surf_grib2_to_csv(input_dir, output_dir, date):
+def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
     
     # 年月日を取得
-    year = date.year
-    month = date.month
-    day = date.day
+    year = start_date.year
+    month = start_date.month
+    day = start_date.day
         
+    # 出力ファイル名
+    output_filename = 'GSM_surf_{0:04d}_{1:02d}_{2:02d}.csv'.format(
+        start_date.year, start_date.month, start_date.day)
+    output_filepath = os.path.join(output_dir, output_filename)
+    
+    # ファイルが存在する場合は終了
+    if os.path.isfile(output_filepath):
+        return
+    
     # 格納用のDataFrameを用意する
     hh_df = None
     
@@ -311,7 +350,10 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, date):
         
         # 日を跨いだらdayを1加算する
         if hh == 0:
-            day = day + 1
+            date = start_date + datetime.timedelta(days=1)
+            year = date.year
+            month = date.month
+            day = date.day
         
         # ファイル名を取得する
         filename = get_gsm_surf_file_name(year, month, day, hh)
@@ -322,20 +364,25 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, date):
         
         # 列名リストとndarrayを準備する
         column_names = []
-        values_array = np.empty(0, dtype=np.float32)
+        values_array = np.empty(0)
         
         # 予測時刻=0hrのデータを取り出す
         hr0_data = grbs.select(forecastTime=0)
         
-        # 学習に用いるデータのみを取り出し、
-        # values_arrayに追加する
+        # 学習に用いるデータのみを取り出し、values_arrayに追加する
         for data in hr0_data:
             
             if data.parameterName == 'Total precipitation':
                 if data.lengthOfTimeRange != 6:
                     continue
                 
-            #print(data.parameterName)
+            # 重要パラメータかを判定し、重要でないパラメータはCSVに出力しない
+            if is_parameter_important_in_gsm_surf(data.parameterName):
+                pass
+            else:
+                continue
+            
+            # パラメータ名を日本語に変換する
             param_name = paramet_name_to_japanese(data.parameterName)
             if param_name is None:
                 continue
@@ -374,17 +421,14 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, date):
             hh_df = hh_df.append(df, ignore_index=True)
         
     # 日付のデータを追加する
-    hh_df['日付'] = date
-    
-    print(hh_df.info())
-    
-    # 出力ファイル名
-    filename = 'GSM_surf_{0:04d}_{1:02d}_{2:02d}.csv'.format(date.year, date.month, date.day)
-    filepath = os.path.join(output_dir, filename)
+    hh_df['日付'] = start_date
     
     # 1日分のデータをCSVファイルに出力する
     hh_df = move_datetime_column_to_top(hh_df)
-    hh_df.to_csv(filepath, chunksize=10)
+    hh_df.to_csv(output_filepath)
+    
+    print(output_filepath)
+    #print(hh_df.info())
     
 ##################################################
 # GSMの指定気圧面データをGRIB2からCSVに変換する
@@ -448,7 +492,7 @@ if __name__ == '__main__':
     year = 2017
     month = 1
     day = 1
-    days = 1
+    days = 31
     
     # GSMの過去データをダウンロードする
     download_gsm_files(input_dir, year, month, day, days)

@@ -1,0 +1,94 @@
+1:Pressure reduced to MSL:Pa (instant):regular_ll:meanSea:level 0:fcst time 0 hrs:from 201701011200
+2:Surface pressure:Pa (instant):regular_ll:surface:level 0:fcst time 0 hrs:from 201701011200
+3:10 metre U wind component:m s**-1 (instant):regular_ll:heightAboveGround:level 10 m:fcst time 0 hrs:from 201701011200
+4:10 metre V wind component:m s**-1 (instant):regular_ll:heightAboveGround:level 10 m:fcst time 0 hrs:from 201701011200
+5:2 metre temperature:K (instant):regular_ll:heightAboveGround:level 2 m:fcst time 0 hrs:from 201701011200
+6:2 metre relative humidity:% (instant):regular_ll:heightAboveGround:level 2 m:fcst time 0 hrs:from 201701011200
+7:Low cloud cover:% (instant):regular_ll:surface:level 0:fcst time 0 hrs:from 201701011200
+8:Medium cloud cover:% (instant):regular_ll:surface:level 0:fcst time 0 hrs:from 201701011200
+9:High cloud cover:% (instant):regular_ll:surface:level 0:fcst time 0 hrs:from 201701011200
+10:Total cloud cover:% (instant):regular_ll:surface:level 0:fcst time 0 hrs:from 201701011200
+21:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-1 hrs (accum):from 201701011200
+32:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-2 hrs (accum):from 201701011200
+43:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-3 hrs (accum):from 201701011200
+54:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-4 hrs (accum):from 201701011200
+65:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-5 hrs (accum):from 201701011200
+76:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-6 hrs (accum):from 201701011200
+87:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-7 hrs (accum):from 201701011200
+98:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-8 hrs (accum):from 201701011200
+109:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-9 hrs (accum):from 201701011200
+120:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-10 hrs (accum):from 201701011200
+131:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-11 hrs (accum):from 201701011200
+142:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-12 hrs (accum):from 201701011200
+153:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-13 hrs (accum):from 201701011200
+164:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-14 hrs (accum):from 201701011200
+175:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-15 hrs (accum):from 201701011200
+186:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-16 hrs (accum):from 201701011200
+197:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-17 hrs (accum):from 201701011200
+208:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-18 hrs (accum):from 201701011200
+219:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-19 hrs (accum):from 201701011200
+230:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-20 hrs (accum):from 201701011200
+241:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-21 hrs (accum):from 201701011200
+252:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-22 hrs (accum):from 201701011200
+263:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-23 hrs (accum):from 201701011200
+274:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-24 hrs (accum):from 201701011200
+285:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-25 hrs (accum):from 201701011200
+296:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-26 hrs (accum):from 201701011200
+307:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-27 hrs (accum):from 201701011200
+318:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-28 hrs (accum):from 201701011200
+329:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-29 hrs (accum):from 201701011200
+340:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-30 hrs (accum):from 201701011200
+351:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-31 hrs (accum):from 201701011200
+362:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-32 hrs (accum):from 201701011200
+373:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-33 hrs (accum):from 201701011200
+384:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-34 hrs (accum):from 201701011200
+395:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-35 hrs (accum):from 201701011200
+406:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-36 hrs (accum):from 201701011200
+417:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-37 hrs (accum):from 201701011200
+428:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-38 hrs (accum):from 201701011200
+439:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-39 hrs (accum):from 201701011200
+450:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-40 hrs (accum):from 201701011200
+461:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-41 hrs (accum):from 201701011200
+472:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-42 hrs (accum):from 201701011200
+483:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-43 hrs (accum):from 201701011200
+494:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-44 hrs (accum):from 201701011200
+505:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-45 hrs (accum):from 201701011200
+516:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-46 hrs (accum):from 201701011200
+527:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-47 hrs (accum):from 201701011200
+538:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-48 hrs (accum):from 201701011200
+549:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-49 hrs (accum):from 201701011200
+560:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-50 hrs (accum):from 201701011200
+571:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-51 hrs (accum):from 201701011200
+582:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-52 hrs (accum):from 201701011200
+593:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-53 hrs (accum):from 201701011200
+604:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-54 hrs (accum):from 201701011200
+615:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-55 hrs (accum):from 201701011200
+626:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-56 hrs (accum):from 201701011200
+637:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-57 hrs (accum):from 201701011200
+648:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-58 hrs (accum):from 201701011200
+659:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-59 hrs (accum):from 201701011200
+670:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-60 hrs (accum):from 201701011200
+681:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-61 hrs (accum):from 201701011200
+692:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-62 hrs (accum):from 201701011200
+703:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-63 hrs (accum):from 201701011200
+714:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-64 hrs (accum):from 201701011200
+725:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-65 hrs (accum):from 201701011200
+736:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-66 hrs (accum):from 201701011200
+747:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-67 hrs (accum):from 201701011200
+758:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-68 hrs (accum):from 201701011200
+769:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-69 hrs (accum):from 201701011200
+780:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-70 hrs (accum):from 201701011200
+791:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-71 hrs (accum):from 201701011200
+802:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-72 hrs (accum):from 201701011200
+813:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-73 hrs (accum):from 201701011200
+824:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-74 hrs (accum):from 201701011200
+835:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-75 hrs (accum):from 201701011200
+846:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-76 hrs (accum):from 201701011200
+857:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-77 hrs (accum):from 201701011200
+868:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-78 hrs (accum):from 201701011200
+879:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-79 hrs (accum):from 201701011200
+890:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-80 hrs (accum):from 201701011200
+901:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-81 hrs (accum):from 201701011200
+912:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-82 hrs (accum):from 201701011200
+923:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-83 hrs (accum):from 201701011200
+934:Total precipitation:kg m-2 (accum):regular_ll:surface:level 0:fcst time 0-84 hrs (accum):from 201701011200
