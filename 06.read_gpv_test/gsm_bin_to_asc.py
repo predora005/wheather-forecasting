@@ -9,7 +9,7 @@ import pandas as pd
 ##################################################
 # MSMファイル名を取得する
 ##################################################
-def get_msm_file_name(year, month, day, hh):
+def get_msm_pall_file_name(year, month, day, hh):
     # ファイル名を設定する
     #   ex) Z__C_RJTD_20170101000000_MSM_GPV_Rjp_L-pall_FH00-15_grib2.bin
     filename = 'Z__C_RJTD_{0:04d}{1:02d}{2:02d}{3:02d}0000_MSM_GPV_Rjp_L-pall_FH00-15_grib2.bin'.format(
@@ -18,9 +18,9 @@ def get_msm_file_name(year, month, day, hh):
     return filename
     
 ##################################################
-# GSMファイル名を取得する
+# GSM指定気圧面データのファイル名を取得する
 ##################################################
-def get_gsm_file_name(year, month, day, hh):
+def get_gsm_pall_file_name(year, month, day, hh):
     # ファイル名を設定する
     #   ex) Z__C_RJTD_20170102000000_GSM_GPV_Rjp_L-pall_FD0000-0312_grib2.bin
     filename = 'Z__C_RJTD_{0:04d}{1:02d}{2:02d}{3:02d}0000_GSM_GPV_Rjp_L-pall_FD0000-0312_grib2.bin'.format(
@@ -29,16 +29,24 @@ def get_gsm_file_name(year, month, day, hh):
     return filename
     
 ##################################################
+# GSM地表データのファイル名を取得する
+##################################################
+def get_gsm_surf_file_name(year, month, day, hh):
+    # ファイル名を設定する
+    #   ex) Z__C_RJTD_20170102000000_GSM_GPV_Rjp_L-pall_FD0000-0312_grib2.bin
+    filename = 'Z__C_RJTD_{0:04d}{1:02d}{2:02d}{3:02d}0000_GSM_GPV_Rjp_Lsurf_FD0000-0312_grib2.bin'.format(
+        year, month, day, hh)
+        
+    return filename
+    
+##################################################
 # URLを取得する
 ##################################################
-def get_url(year, month, day, hh):
+def get_url(year, month, day, filename):
     
     # ディレクトリ名を設定する
     date_dir = '{0:04d}/{1:02d}/{2:02d}'.format(year, month, day)
     
-    # ファイル名を取得する
-    filename = get_gsm_file_name(year, month, day, hh)
-            
     # URLを設定する
     url = 'http://database.rish.kyoto-u.ac.jp/arch/jmadata/data/gpv/original/{0:s}/{1:s}'.format(
         date_dir, filename)
@@ -46,30 +54,34 @@ def get_url(year, month, day, hh):
     return url
     
 ##################################################
-# 列名を生成する
+# MSMの初期時刻を取得する
 ##################################################
-#def make_column_names(levels, ):
-    
+def get_msm_initial_hours():
+    return [9, 12, 16, 18, 21, 0, 3, 6]
+
+##################################################
+# GSMの初期時刻を取得する
+##################################################
+def get_gsm_initial_hours():
+    return [12, 18, 0, 6]
 
 ##################################################
 # GSMの過去データをダウンロードする
 ##################################################
-def download_gsm_files(start_year, start_month, start_day, days):
+def download_gsm_files(output_dir, start_year, start_month, start_day, days):
     
     # 格納先ディレクトリを用意する
-    cwd = os.getcwd()
-    input_dir = os.path.join(cwd, 'input3')
-    os.makedirs(input_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
     
     # 取得を開始する年月日を設定
     date = datetime.date(start_year, start_month, start_day)
     
     # 初期時刻(UTC)
-    initial_hours = [12, 18, 0, 6]
+    initial_hours = get_gsm_initial_hours()
     
     # 指定した日数分のデータをダウンロードする
     days = 1    # 取得するデータの日数
-    for day in range(days):
+    for i in range(days):
         
         # 年月日を取得
         year = date.year
@@ -83,52 +95,46 @@ def download_gsm_files(start_year, start_month, start_day, days):
                 day = day + 1
             
             # ファイル名を取得する
-            filename = get_gsm_file_name(year, month, day, hh)
+            filenames = [
+                get_gsm_pall_file_name(year, month, day, hh),
+                get_gsm_surf_file_name(year, month, day, hh)
+            ]
             
-            output_filepath = os.path.join(input_dir, filename)
-            if not os.path.isfile(output_filepath):
+            for filename in filenames:
                 
-                # URLを設定する
-                url = get_url(year, month, day, hh)
-                
-                # 指定したURLからダウンロードする
-                result = subprocess.run(['curl', '-O', url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=input_dir)
-                
-                # 1秒ディレイ
-                time.sleep(1)
-                
+                # ファイルが存在しなければダウンロードする
+                output_filepath = os.path.join(output_dir, filename)
+                if not os.path.isfile(output_filepath):
+                    
+                    # URLを設定する
+                    url = get_url(year, month, day, filename)
+                    
+                    # 指定したURLからダウンロードする
+                    result = subprocess.run(['curl', '-O', url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=output_dir)
+                    print(url)
+                    
+                    # 1秒ディレイ
+                    time.sleep(1)
+                    
         # 日付を更新する
         date = date + datetime.timedelta(days=1)
 
 ##################################################
-# メイン
+# GSMの指定気圧面データをGRIB2からCSVに変換する
 ##################################################
-if __name__ == '__main__':
+def gsm_pall_grib2_to_csv(input_dir, output_dir, start_year, start_month, start_day, days):
     
-    #
-    # 1日単位でMSMのデータをCSVに出力する
-    #
-    year = 2017
-    month = 1
-    day = 1
-    days = 1
-    
-    # GSMの過去データをダウンロードする
-    download_gsm_files(year, month, day, days)
-    
-    
-    # 入力ディレクトリ
-    cwd = os.getcwd()
-    input_dir = os.path.join(cwd, 'input3')
+    # 格納先ディレクトリを用意する
+    os.makedirs(output_dir, exist_ok=True)
     
     # 取得を開始する年月日を設定
-    date = datetime.date(year, month, day)
+    date = datetime.date(start_year, start_month, start_day)
     
     # 初期時刻(UTC)
-    initial_hours = [12, 18, 0, 6]
+    initial_hours = get_gsm_initial_hours()
     
     # 指定した日数分のデータを読み込みCSCファイルに出力する
-    for day in range(days):
+    for i in range(days):
         
         # 年月日を取得
         year = date.year
@@ -137,7 +143,8 @@ if __name__ == '__main__':
         
         # 格納用のDataFrameを用意する
         hh_df = None
-
+        
+        # 初期時刻ごとに処理する
         for hh in initial_hours:
             
             # 日を跨いだらdayを1加算する
@@ -145,7 +152,7 @@ if __name__ == '__main__':
                 day = day + 1
             
             # ファイル名を取得する
-            filename = get_gsm_file_name(year, month, day, hh)
+            filename = get_gsm_pall_file_name(year, month, day, hh)
             filepath = os.path.join(input_dir, filename)
             
             # GRIB2ファイルを読み込む
@@ -179,7 +186,7 @@ if __name__ == '__main__':
                     #   和歌山〜福島 (34,135)〜(38,141)
                     #   静岡〜いわき (35,138)〜(37,141)
                     data, latitudes, longitudes = data.data(lat1=35, lat2=37, lon1=138, lon2=141)
-                    print(data.shape, latitudes.min(), latitudes.max(), longitudes.min(), longitudes.max())
+                    #print(data.shape, latitudes.min(), latitudes.max(), longitudes.min(), longitudes.max())
                     
                     # 物理量, 緯度, 経度を一次元化する
                     values = data.reshape(-1,)
@@ -195,12 +202,14 @@ if __name__ == '__main__':
                     # 物理量をndrrayに追加する
                     values_array = np.append(values_array, values)
                     
-                # 相対湿度を取り出す
-                #humidities = grbs.select(level=level, forecastTime=0, parameterName='Relative humidity')[0]
-            
             # 物理量と列名からDataFrameを作成する
             values_array = values_array.reshape(1,values_array.shape[0])
             df = pd.DataFrame(data=values_array, columns=column_names)
+            
+            # 時刻データを追加する(UTCから日本時間に変更する)
+            hh = hh - 9
+            if hh < 0: hh = hh + 24
+            df['時'] = hh
             
             # 1時刻のDataFrameを、1日分のDataFrameに追加する
             if hh_df is None:
@@ -208,13 +217,67 @@ if __name__ == '__main__':
             else:
                 hh_df = hh_df.append(df, ignore_index=True)
         
+        # 日付のデータを追加する
+        hh_df['日付'] = date
         
+        # 出力ファイル名
+        filename = 'GSM_pall_{0:04d}_{1:02d}_{2:02d}.csv'.format(date.year, date.month, date.day)
+        filepath = os.path.join(output_dir, filename)
         
         # 1日分のデータをCSVファイルに出力する
-        hh_df.to_csv('test.csv')
+        hh_df = move_datetime_column_to_top(hh_df)
+        hh_df.to_csv(filepath)
         
         # 日付を更新する
         date = date + datetime.timedelta(days=1)
         
+##################################################
+# 日付・時刻の列を先頭に移動する
+##################################################
+def move_datetime_column_to_top(df):
+    """ 日付・時刻の列を先頭に移動する
+
+    Args:
+        df(DataFrame) : 変換対象のDataFrame
+
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    new_columns = ['日付', '時']
+    for col in df.columns:
+        if (col != '日付') and (col != '時'):
+            new_columns.append(col)
     
+    new_df = df.loc[:, new_columns]
+    
+    return new_df
+    
+##################################################
+# メイン
+##################################################
+if __name__ == '__main__':
+    
+    #
+    # 1日単位でGSMのデータをCSVに出力する
+    #
+    
+    # GSMデータの格納ディレクトリ
+    cwd = os.getcwd()
+    input_dir = os.path.join(cwd, 'input3')
+    
+    # 取得開始日付、取得する日数を設定する
+    year = 2017
+    month = 1
+    day = 1
+    days = 1
+    
+    # GSMの過去データをダウンロードする
+    download_gsm_files(input_dir, year, month, day, days)
+    
+    # CSVファイルの出力先ディレクトリ
+    cwd = os.getcwd()
+    output_dir = os.path.join(cwd, 'input4')
+    
+    # GSMのデータをGRIB2からCSVに変換する
+    gsm_pall_grib2_to_csv(input_dir, output_dir, year, month, day, days)
     
