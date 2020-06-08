@@ -66,6 +66,87 @@ def get_gsm_initial_hours():
     return [12, 18, 0, 6]
 
 ##################################################
+# MSMの指定気圧面を取得する
+##################################################
+def get_msm_mandatory_levels():
+    return [850, 700, 500]
+
+##################################################
+# GSMの指定気圧面を取得する
+##################################################
+def get_gsm_mandatory_levels():
+    return [850, 700, 500]
+    
+##################################################
+# GSMの緯度,経度の範囲
+##################################################
+def get_gsm_latlons():
+    #   和歌山〜福島 (34,135)〜(38,141)
+    #   静岡〜いわき (35,138)〜(37,141)
+    # lat_min, lat_max, lon_min, lon_max
+    
+    return (35, 37, 138, 141)
+
+##################################################
+# パラメータ名を日本語に変換する
+##################################################
+def paramet_name_to_japanese(param_name):
+    
+    param_name_dict = {
+        'Pressure reduced to MSL'       : '海面更正気圧',
+        'Pressure'                      : '地上気圧',
+        '10 metre U wind component'     : '東西風',
+        '10 metre V wind component'     : '南北風',
+        '2 metre temperature'           : '気温',
+        '2 metre relative humidity'     : '相対湿度',
+        'Low cloud cover'               : '下層雲量',
+        'Medium cloud cover'            : '中層雲量',
+        'High cloud cover'              : '上層雲量',
+        'Total cloud cover'             : '全雲量',
+        'Total precipitation'           : '積算降水量',
+        'Geopotential height'           : '高度',
+        'u-component of wind'           : '東西風',
+        'v-component of wind'           : '南北風',
+        'Temperature'                   : '気温',
+        'Vertical velocity (pressure)'  : '上昇流',
+        'Relative humidity'             : '相対湿度'
+    }
+    
+    if param_name in param_name_dict:
+        return param_name_dict[param_name]
+    else:
+        return None
+
+##################################################
+# 浮動小数点を32ビットに変更する
+##################################################
+def type_to_float32(df, inplace=True):
+    """ 浮動小数点を32ビットに変更する
+
+    Args:
+        df(DataFrame) : 変換対象のDataFrame
+        inplace(bool) : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    for col in new_df.columns:
+        typ = new_df[col].dtype
+        if typ == object:
+            # object -> np.float32
+            new_df = new_df.astype({col: np.float32})
+        elif typ == np.float64:
+            # np.float64 -> np.float32
+            new_df = new_df.astype({col: np.float32})
+        
+    return new_df
+    
+##################################################
 # GSMの過去データをダウンロードする
 ##################################################
 def download_gsm_files(output_dir, start_year, start_month, start_day, days):
@@ -122,7 +203,193 @@ def download_gsm_files(output_dir, start_year, start_month, start_day, days):
 ##################################################
 # GSMの指定気圧面データをGRIB2からCSVに変換する
 ##################################################
-def gsm_pall_grib2_to_csv(input_dir, output_dir, start_year, start_month, start_day, days):
+def gsm_pall_grib2_to_csv(input_dir, output_dir, date):
+    
+    # 年月日を取得
+    year = date.year
+    month = date.month
+    day = date.day
+        
+    # 格納用のDataFrameを用意する
+    hh_df = None
+    
+    # 初期時刻ごとに処理する
+    for hh in get_gsm_initial_hours():
+        
+        # 日を跨いだらdayを1加算する
+        if hh == 0:
+            day = day + 1
+        
+        # ファイル名を取得する
+        filename = get_gsm_pall_file_name(year, month, day, hh)
+        filepath = os.path.join(input_dir, filename)
+        
+        # GRIB2ファイルを読み込む
+        grbs = pygrib.open(filepath)
+        
+        # 列名リストとndarrayを準備する
+        column_names = []
+        values_array = np.empty(0, dtype=np.float32)
+        
+        # 指定気圧面のデータを取り出す
+        levels = get_gsm_mandatory_levels()
+        for level in levels:
+            
+            # 指定気圧面のデータを取り出す
+            plane_data = grbs.select(level=level, forecastTime=0)
+            
+            # 指定気圧面のうち学習に用いるデータのみを取り出し、
+            # values_arrayに追加する
+            for data in plane_data:
+                
+                param_name = paramet_name_to_japanese(data.parameterName)
+                if param_name is None:
+                    continue
+                
+                # 指定した(緯度,経度)に含まれる格子点のデータを抽出する
+                lat_min, lat_max, lon_min, lon_max = get_gsm_latlons()
+                data, latitudes, longitudes = data.data(lat1=lat_min, lat2=lat_max, lon1=lon_min, lon2=lon_max)
+                #print(data.shape, latitudes.min(), latitudes.max(), longitudes.min(), longitudes.max())
+                
+                # 物理量, 緯度, 経度を一次元化する
+                values = data.reshape(-1,)
+                latitudes = latitudes.reshape(-1,)
+                longitudes = longitudes.reshape(-1,)
+                
+                # 列名を作成し、リストに追加する
+                for i in range(latitudes.shape[0]):
+                    column_name = '{0:d}hPa_lat{1:.2f}_long{2:.3f}_{3:s}'.format(
+                        level, latitudes[i], longitudes[i], param_name)
+                    column_names.append(column_name)
+                
+                # 物理量をndrrayに追加する
+                values_array = np.append(values_array, values)
+                
+        # 物理量と列名からDataFrameを作成する
+        values_array = values_array.reshape(1,values_array.shape[0])
+        df = pd.DataFrame(data=values_array, columns=column_names)
+        
+        # 時刻データを追加する(UTCから日本時間に変更する)
+        hh = hh - 9
+        if hh < 0: hh = hh + 24
+        df['時'] = hh
+        
+        # 1時刻のDataFrameを、1日分のDataFrameに追加する
+        if hh_df is None:
+            hh_df = df
+        else:
+            hh_df = hh_df.append(df, ignore_index=True)
+    
+    # 日付のデータを追加する
+    hh_df['日付'] = date
+    
+    print(hh_df.info())
+    
+    # 出力ファイル名
+    filename = 'GSM_pall_{0:04d}_{1:02d}_{2:02d}.csv'.format(date.year, date.month, date.day)
+    filepath = os.path.join(output_dir, filename)
+    
+    # 1日分のデータをCSVファイルに出力する
+    hh_df = move_datetime_column_to_top(hh_df)
+    hh_df.to_csv(filepath)
+
+##################################################
+# GSMの地表データをGRIB2からCSVに変換する
+##################################################
+def gsm_surf_grib2_to_csv(input_dir, output_dir, date):
+    
+    # 年月日を取得
+    year = date.year
+    month = date.month
+    day = date.day
+        
+    # 格納用のDataFrameを用意する
+    hh_df = None
+    
+    # 初期時刻ごとに処理する
+    for hh in get_gsm_initial_hours():
+        
+        # 日を跨いだらdayを1加算する
+        if hh == 0:
+            day = day + 1
+        
+        # ファイル名を取得する
+        filename = get_gsm_surf_file_name(year, month, day, hh)
+        filepath = os.path.join(input_dir, filename)
+        
+        # GRIB2ファイルを読み込む
+        grbs = pygrib.open(filepath)
+        
+        # 列名リストとndarrayを準備する
+        column_names = []
+        values_array = np.empty(0, dtype=np.float32)
+        
+        # 予測時刻=0hrのデータを取り出す
+        hr0_data = grbs.select(forecastTime=0)
+        
+        # 学習に用いるデータのみを取り出し、
+        # values_arrayに追加する
+        for data in hr0_data:
+            
+            if data.parameterName == 'Total precipitation':
+                if data.lengthOfTimeRange != 6:
+                    continue
+                
+            #print(data.parameterName)
+            param_name = paramet_name_to_japanese(data.parameterName)
+            if param_name is None:
+                continue
+            
+            # 指定した(緯度,経度)に含まれる格子点のデータを抽出する
+            lat_min, lat_max, lon_min, lon_max = get_gsm_latlons()
+            data, latitudes, longitudes = data.data(lat1=lat_min, lat2=lat_max, lon1=lon_min, lon2=lon_max)
+            
+            # 物理量, 緯度, 経度を一次元化する
+            values = data.reshape(-1,)
+            latitudes = latitudes.reshape(-1,)
+            longitudes = longitudes.reshape(-1,)
+            
+            # 列名を作成し、リストに追加する
+            for i in range(latitudes.shape[0]):
+                column_name = 'Surf_lat{0:.2f}_long{1:.3f}_{2:s}'.format(
+                    latitudes[i], longitudes[i], param_name)
+                column_names.append(column_name)
+            
+            # 物理量をndrrayに追加する
+            values_array = np.append(values_array, values)
+                
+        # 物理量と列名からDataFrameを作成する
+        values_array = values_array.reshape(1,values_array.shape[0])
+        df = pd.DataFrame(data=values_array, columns=column_names)
+        
+        # 時刻データを追加する(UTCから日本時間に変更する)
+        hh = hh - 9
+        if hh < 0: hh = hh + 24
+        df['時'] = hh
+        
+        # 1時刻のDataFrameを、1日分のDataFrameに追加する
+        if hh_df is None:
+            hh_df = df
+        else:
+            hh_df = hh_df.append(df, ignore_index=True)
+        
+    # 日付のデータを追加する
+    hh_df['日付'] = date
+    
+    print(hh_df.info())
+    
+    # 出力ファイル名
+    filename = 'GSM_surf_{0:04d}_{1:02d}_{2:02d}.csv'.format(date.year, date.month, date.day)
+    filepath = os.path.join(output_dir, filename)
+    
+    # 1日分のデータをCSVファイルに出力する
+    hh_df = move_datetime_column_to_top(hh_df)
+    hh_df.to_csv(filepath, chunksize=10)
+    
+##################################################
+# GSMの指定気圧面データをGRIB2からCSVに変換する
+##################################################
+def gsm_grib2_to_csv(input_dir, output_dir, start_year, start_month, start_day, days):
     
     # 格納先ディレクトリを用意する
     os.makedirs(output_dir, exist_ok=True)
@@ -136,97 +403,9 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_year, start_month, start_
     # 指定した日数分のデータを読み込みCSCファイルに出力する
     for i in range(days):
         
-        # 年月日を取得
-        year = date.year
-        month = date.month
-        day = date.day
+        gsm_pall_grib2_to_csv(input_dir, output_dir, date)
         
-        # 格納用のDataFrameを用意する
-        hh_df = None
-        
-        # 初期時刻ごとに処理する
-        for hh in initial_hours:
-            
-            # 日を跨いだらdayを1加算する
-            if hh == 0:
-                day = day + 1
-            
-            # ファイル名を取得する
-            filename = get_gsm_pall_file_name(year, month, day, hh)
-            filepath = os.path.join(input_dir, filename)
-            
-            # GRIB2ファイルを読み込む
-            grbs = pygrib.open(filepath)
-            
-            # 列名リストとndarrayを準備する
-            column_names = []
-            values_array = np.empty(0)
-            
-            # 指定気圧面のデータを取り出す
-            levels = [850, 700, 500]
-            for level in levels:
-                
-                # 指定気圧面のデータを取り出す
-                plane_data = grbs.select(level=level, forecastTime=0)
-                
-                # 指定気圧面のうち学習に用いるデータのみを取り出し、
-                # values_arrayに追加する
-                for data in plane_data:
-                    
-                    if data.parameterName == 'Relative humidity':
-                        param_name = '相対湿度'
-                    elif data.parameterName == 'Temperature':
-                        param_name = '温度'
-                    elif data.parameterName == 'Vertical velocity':
-                        param_name = '上昇流'
-                    else:
-                        continue
-                
-                    # 指定した(緯度,経度)に含まれる格子点のデータを抽出する
-                    #   和歌山〜福島 (34,135)〜(38,141)
-                    #   静岡〜いわき (35,138)〜(37,141)
-                    data, latitudes, longitudes = data.data(lat1=35, lat2=37, lon1=138, lon2=141)
-                    #print(data.shape, latitudes.min(), latitudes.max(), longitudes.min(), longitudes.max())
-                    
-                    # 物理量, 緯度, 経度を一次元化する
-                    values = data.reshape(-1,)
-                    latitudes = latitudes.reshape(-1,)
-                    longitudes = longitudes.reshape(-1,)
-                    
-                    # 列名を作成し、リストに追加する
-                    for i in range(latitudes.shape[0]):
-                        column_name = '{0:d}hPa_lat{1:.3f}_long{2:.3f}_{3:s}'.format(
-                            level, latitudes[i], longitudes[i], param_name)
-                        column_names.append(column_name)
-                    
-                    # 物理量をndrrayに追加する
-                    values_array = np.append(values_array, values)
-                    
-            # 物理量と列名からDataFrameを作成する
-            values_array = values_array.reshape(1,values_array.shape[0])
-            df = pd.DataFrame(data=values_array, columns=column_names)
-            
-            # 時刻データを追加する(UTCから日本時間に変更する)
-            hh = hh - 9
-            if hh < 0: hh = hh + 24
-            df['時'] = hh
-            
-            # 1時刻のDataFrameを、1日分のDataFrameに追加する
-            if hh_df is None:
-                hh_df = df
-            else:
-                hh_df = hh_df.append(df, ignore_index=True)
-        
-        # 日付のデータを追加する
-        hh_df['日付'] = date
-        
-        # 出力ファイル名
-        filename = 'GSM_pall_{0:04d}_{1:02d}_{2:02d}.csv'.format(date.year, date.month, date.day)
-        filepath = os.path.join(output_dir, filename)
-        
-        # 1日分のデータをCSVファイルに出力する
-        hh_df = move_datetime_column_to_top(hh_df)
-        hh_df.to_csv(filepath)
+        gsm_surf_grib2_to_csv(input_dir, output_dir, date)
         
         # 日付を更新する
         date = date + datetime.timedelta(days=1)
@@ -279,5 +458,5 @@ if __name__ == '__main__':
     output_dir = os.path.join(cwd, 'input4')
     
     # GSMのデータをGRIB2からCSVに変換する
-    gsm_pall_grib2_to_csv(input_dir, output_dir, year, month, day, days)
+    gsm_grib2_to_csv(input_dir, output_dir, year, month, day, days)
     
