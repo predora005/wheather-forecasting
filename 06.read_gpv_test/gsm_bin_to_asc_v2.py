@@ -241,6 +241,9 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
     # 初期時刻ごとに処理する
     for hh in get_gsm_initial_hours():
         
+        # DEBUG
+        stop_watch.start()
+        
         # 日を跨いだらdayを1加算する
         if hh == 0:
             date = start_date + datetime.timedelta(days=1)
@@ -257,9 +260,9 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
         filepath = os.path.join(input_dir, filename)
         
         # GRIB2ファイルを読み込む
-        stop_watch.start()
+        #stop_watch.start()
         grbs = pygrib.open(filepath)
-        stop_watch.stop().print_elapsed_sec('pygrib.open')
+        #stop_watch.stop().print_elapsed_sec('pygrib.open')
 
         # 列名リストとndarrayを準備する
         column_names = []
@@ -270,65 +273,67 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
         for level in levels:
             
             # DEBUG
-            print("==============================")
-            print('level: {0:d}'.format(level))
-            
-            # 指定気圧面のデータを取り出す
-            stop_watch.start()
-            plane_data = grbs.select(level=level, forecastTime=0)
-            stop_watch.stop().print_elapsed_sec('grbs.select')
+            #print("==============================")
+            #print('level: {0:d}'.format(level))
             
             # 指定気圧面のうち学習に用いるデータのみを取り出し、
             # values_arrayに追加する
-            for data in plane_data:
+            for grb in grbs:
+                
+                # 指定気圧面、初期時刻のデータ以外の場合は飛ばす
+                if (grb.level != level) or (grb.forecastTime != 0):
+                    continue
                 
                 # 重要パラメータかを判定し、重要でないパラメータはCSVに出力しない
-                if is_parameter_important_in_gsm_pall(data.parameterName):
+                if is_parameter_important_in_gsm_pall(grb.parameterName):
                     pass
                 else:
                     continue
-            
+                
                 # パラメータ名を日本語に変換する
-                param_name = paramet_name_to_japanese(data.parameterName)
+                param_name = paramet_name_to_japanese(grb.parameterName)
                 if param_name is None:
                     continue
                 
                 # DEBUG
-                print("==============================")
-                print('Parameter name: {0:s}'.format(data.parameterName))
+                #print("==============================")
+                #print('Parameter name: {0:s}'.format(grb.parameterName))
             
                 # 指定した(緯度,経度)に含まれる格子点のデータを抽出する
-                stop_watch.start()
+                #stop_watch.start()
                 lat_min, lat_max, lon_min, lon_max = get_gsm_latlons()
-                data, latitudes, longitudes = data.data(lat1=lat_min, lat2=lat_max, lon1=lon_min, lon2=lon_max)
+                data, latitudes, longitudes = grb.data(lat1=lat_min, lat2=lat_max, lon1=lon_min, lon2=lon_max)
                 #print(data.shape, latitudes.min(), latitudes.max(), longitudes.min(), longitudes.max())
-                stop_watch.stop().print_elapsed_sec('data.data')
+                #stop_watch.stop().print_elapsed_sec('grb.data')
                 
                 # 物理量, 緯度, 経度を一次元化する
-                stop_watch.start()
+                #stop_watch.start()
                 values = data.reshape(-1,)
                 latitudes = latitudes.reshape(-1,)
                 longitudes = longitudes.reshape(-1,)
-                stop_watch.stop().print_elapsed_sec('data.reshape(-1,)')
+                #stop_watch.stop().print_elapsed_sec('data.reshape(-1,)')
                 
                 # 列名を作成し、リストに追加する
-                stop_watch.start()
+                #stop_watch.start()
                 for i in range(latitudes.shape[0]):
                     column_name = '{0:d}hPa_lat{1:.2f}_long{2:.3f}_{3:s}'.format(
                         level, latitudes[i], longitudes[i], param_name)
                     column_names.append(column_name)
-                stop_watch.stop().print_elapsed_sec('column_names.append')
+                #stop_watch.stop().print_elapsed_sec('column_names.append')
                 
                 # 物理量をndrrayに追加する
-                stop_watch.start()
+                #stop_watch.start()
                 values_array = np.append(values_array, values)
-                stop_watch.stop().print_elapsed_sec('np.append')
+                #stop_watch.stop().print_elapsed_sec('np.append')
                 
+        # GRIBファイルを閉じる
+        grbs.close()
+        
         # 物理量と列名からDataFrameを作成する
-        stop_watch.start()
+        #stop_watch.start()
         values_array = values_array.reshape(1,values_array.shape[0])
         df = pd.DataFrame(data=values_array, columns=column_names)
-        stop_watch.stop().print_elapsed_sec('pd.DataFrame')
+        #stop_watch.stop().print_elapsed_sec('pd.DataFrame')
         
         # 時刻データを追加する(UTCから日本時間に変更する)
         hh = hh - 9
@@ -336,24 +341,23 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
         df['時'] = hh
         
         # 1時刻のDataFrameを、1日分のDataFrameに追加する
-        stop_watch.start()
+        #stop_watch.start()
         if hh_df is None:
             hh_df = df
         else:
             hh_df = hh_df.append(df, ignore_index=True)
-        stop_watch.stop().print_elapsed_sec('hh_df.append')
-    
-    # GRIBファイルを閉じる
-    grbs.close()
-                
+        #stop_watch.stop().print_elapsed_sec('hh_df.append')
+        
+        stop_watch.stop().print_elapsed_sec('proc time')
+        
     # 日付のデータを追加する
     hh_df['日付'] = start_date
     
     # 1日分のデータをCSVファイルに出力する
-    stop_watch.start()
+    #stop_watch.start()
     hh_df = move_datetime_column_to_top(hh_df)
     hh_df.to_csv(output_filepath)
-    stop_watch.stop().print_elapsed_sec('hh_df.to_csv')
+    #stop_watch.stop().print_elapsed_sec('hh_df.to_csv')
     
     print(output_filepath)
     #print(hh_df.info())
@@ -386,6 +390,9 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
     # 初期時刻ごとに処理する
     for hh in get_gsm_initial_hours():
         
+        # DEBUG
+        stop_watch.start()
+        
         # 日を跨いだらdayを1加算する
         if hh == 0:
             date = start_date + datetime.timedelta(days=1)
@@ -402,53 +409,52 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
         filepath = os.path.join(input_dir, filename)
         
         # GRIB2ファイルを読み込む
-        stop_watch.start()
+        #stop_watch.start()
         grbs = pygrib.open(filepath)
-        stop_watch.stop().print_elapsed_sec('pygrib.open')
+        #stop_watch.stop().print_elapsed_sec('pygrib.open')
         
         # 列名リストとndarrayを準備する
         column_names = []
         values_array = np.empty(0)
         
-        # 予測時刻=0hrのデータを取り出す
-        stop_watch.start()
-        hr0_data = grbs.select(forecastTime=0)
-        stop_watch.stop().print_elapsed_sec('grbs.select')
-        
         # 学習に用いるデータのみを取り出し、values_arrayに追加する
-        for data in hr0_data:
+        for grb in grbs:
             
-            if data.parameterName == 'Total precipitation':
-                if data.lengthOfTimeRange != 6:
-                    continue
-                
+             # 初期時刻のデータ以外であれば飛ばす
+            if grb.forecastTime != 0:
+                 continue
+            
             # 重要パラメータかを判定し、重要でないパラメータはCSVに出力しない
-            if is_parameter_important_in_gsm_surf(data.parameterName):
+            if is_parameter_important_in_gsm_surf(grb.parameterName):
                 pass
             else:
                 continue
             
+            if grb.parameterName == 'Total precipitation':
+                if grb.lengthOfTimeRange != 6:
+                    continue
+                
             # DEBUG
-            print("==============================")
-            print('Parameter name: {0:s}'.format(data.parameterName))
+            #print("==============================")
+            #print('Parameter name: {0:s}'.format(grb.parameterName))
             
             # パラメータ名を日本語に変換する
-            param_name = paramet_name_to_japanese(data.parameterName)
+            param_name = paramet_name_to_japanese(grb.parameterName)
             if param_name is None:
                 continue
             
             # 指定した(緯度,経度)に含まれる格子点のデータを抽出する
-            stop_watch.start()
+            #stop_watch.start()
             lat_min, lat_max, lon_min, lon_max = get_gsm_latlons()
-            data, latitudes, longitudes = data.data(lat1=lat_min, lat2=lat_max, lon1=lon_min, lon2=lon_max)
-            stop_watch.stop().print_elapsed_sec('data.data')
+            data, latitudes, longitudes = grb.data(lat1=lat_min, lat2=lat_max, lon1=lon_min, lon2=lon_max)
+            #stop_watch.stop().print_elapsed_sec('grb.data')
             
             # 物理量, 緯度, 経度を一次元化する
-            stop_watch.start()
+            #stop_watch.start()
             values = data.reshape(-1,)
             latitudes = latitudes.reshape(-1,)
             longitudes = longitudes.reshape(-1,)
-            stop_watch.stop().print_elapsed_sec('data.reshpae(-1,)')
+            #stop_watch.stop().print_elapsed_sec('data.reshpae(-1,)')
             
             # 列名を作成し、リストに追加する
             for i in range(latitudes.shape[0]):
@@ -457,18 +463,18 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
                 column_names.append(column_name)
             
             # 物理量をndrrayに追加する
-            stop_watch.start()
+            #stop_watch.start()
             values_array = np.append(values_array, values)
-            stop_watch.stop().print_elapsed_sec('np.append')
+            #stop_watch.stop().print_elapsed_sec('np.append')
         
         # GRIBファイルを閉じる
         grbs.close()
                 
         # 物理量と列名からDataFrameを作成する
-        stop_watch.start()
+        #stop_watch.start()
         values_array = values_array.reshape(1,values_array.shape[0])
         df = pd.DataFrame(data=values_array, columns=column_names)
-        stop_watch.stop().print_elapsed_sec('pd.DataFrame')
+        #stop_watch.stop().print_elapsed_sec('pd.DataFrame')
         
         # 時刻データを追加する(UTCから日本時間に変更する)
         hh = hh - 9
@@ -476,21 +482,23 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
         df['時'] = hh
         
         # 1時刻のDataFrameを、1日分のDataFrameに追加する
-        stop_watch.start()
+        #stop_watch.start()
         if hh_df is None:
             hh_df = df
         else:
             hh_df = hh_df.append(df, ignore_index=True)
-        stop_watch.stop().print_elapsed_sec('hh_df.append')
+        #stop_watch.stop().print_elapsed_sec('hh_df.append')
+        
+        stop_watch.stop().print_elapsed_sec('proc time')
         
     # 日付のデータを追加する
     hh_df['日付'] = start_date
     
     # 1日分のデータをCSVファイルに出力する
-    stop_watch.start()
+    #stop_watch.start()
     hh_df = move_datetime_column_to_top(hh_df)
     hh_df.to_csv(output_filepath)
-    stop_watch.stop().print_elapsed_sec('hh_df.to_csv')
+    #stop_watch.stop().print_elapsed_sec('hh_df.to_csv')
         
     print(output_filepath)
     #print(hh_df.info())
@@ -555,9 +563,9 @@ if __name__ == '__main__':
     
     # 取得開始日付、取得する日数を設定する
     year = 2017
-    month = 4
+    month = 5
     day = 1
-    days = 1
+    days = 31
     
     # GSMの過去データをダウンロードする
     download_gsm_files(input_dir, year, month, day, days)

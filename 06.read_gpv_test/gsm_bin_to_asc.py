@@ -5,6 +5,7 @@ import datetime, time
 import pygrib
 import numpy as np
 import pandas as pd
+from util import StopWatch
 
 ##################################################
 # MSMファイル名を取得する
@@ -234,8 +235,14 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
     # 格納用のDataFrameを用意する
     hh_df = None
     
+    # 処理時間計測クラス
+    stop_watch = StopWatch()
+    
     # 初期時刻ごとに処理する
     for hh in get_gsm_initial_hours():
+        
+        # DEBUG
+        stop_watch.start()
         
         # 日を跨いだらdayを1加算する
         if hh == 0:
@@ -244,6 +251,10 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
             month = date.month
             day = date.day
             
+        # DEBUG
+        print("==================================================")
+        print('{0:04d}/{1:02d}/{2:02d} {3:02d}:00 PALL'.format(year, month, day, hh))
+        
         # ファイル名を取得する
         filename = get_gsm_pall_file_name(year, month, day, hh)
         filepath = os.path.join(input_dir, filename)
@@ -312,7 +323,9 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
             hh_df = df
         else:
             hh_df = hh_df.append(df, ignore_index=True)
-    
+        
+        stop_watch.stop().print_elapsed_sec('proc time')
+        
     # 日付のデータを追加する
     hh_df['日付'] = start_date
     
@@ -345,8 +358,14 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
     # 格納用のDataFrameを用意する
     hh_df = None
     
+    # 処理時間計測クラス
+    stop_watch = StopWatch()
+    
     # 初期時刻ごとに処理する
     for hh in get_gsm_initial_hours():
+        
+        # DEBUG
+        stop_watch.start()
         
         # 日を跨いだらdayを1加算する
         if hh == 0:
@@ -354,6 +373,10 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
             year = date.year
             month = date.month
             day = date.day
+        
+        # DEBUG
+        print("==================================================")
+        print('{0:04d}/{1:02d}/{2:02d} {3:02d}:00 SURF'.format(year, month, day, hh))
         
         # ファイル名を取得する
         filename = get_gsm_surf_file_name(year, month, day, hh)
@@ -419,6 +442,8 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
             hh_df = df
         else:
             hh_df = hh_df.append(df, ignore_index=True)
+        
+        stop_watch.stop().print_elapsed_sec('proc time')
         
     # 日付のデータを追加する
     hh_df['日付'] = start_date
@@ -490,7 +515,7 @@ if __name__ == '__main__':
     
     # 取得開始日付、取得する日数を設定する
     year = 2017
-    month = 1
+    month = 5
     day = 1
     days = 31
     
