@@ -4,6 +4,7 @@ import sys
 sys.path.append('../')
 import util
 
+import os
 import pandas as pd
 
 ##################################################
@@ -46,8 +47,8 @@ def load_gsm_csv_one_dir(dir_path):
     """
     
     # 指定ディレクトリのCSVファイル一覧取得
-    file_paths = util.get_file_paths(dir_path, 'csv')
-
+    file_paths = util.get_file_paths(dir_path, '.csv')
+    
     # GSMデータを読み込み、DataFrameに格納する
     gsm_df = None
     for file_path in file_paths:

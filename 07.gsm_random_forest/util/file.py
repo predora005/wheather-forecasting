@@ -22,7 +22,7 @@ def get_file_paths(dir_path, extension=None):
     # sortedを使用してファイル名の昇順に読み込む
     for filename in sorted(os.listdir(dir_path)):
         
-        file_path = os.path.join(dir_path,filename)
+        file_path = os.path.join(dir_path, filename)
         
         # ディレクトリの場合はpass
         if os.path.isdir(file_path):

@@ -2,22 +2,19 @@
 
 from .abs_runner import AbsRunner
 import os
-#import wfile
 import wdfproc
-from loader import WeatherStationLoader
+from loader import GsmLoader
 import util
 import pandas as pd
 
 from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
 
 ##################################################
-# 気象庁の気象観測所のデータを用いた
-# 学習・評価・予測 実行クラス
+# GSMデータを用いた学習・評価・予測 実行クラス
 ##################################################
-class WeatherStationForecastRunner(AbsRunner):
-    """ 気象庁の気象観測所のデータを用いた
-        学習・評価・予測 実行クラス
-        
+class GsmForecastRunner(AbsRunner):
+    """ GSMデータを用いた学習・評価・予測 実行クラス
+
     Attributes:
         run_name (string)   : ランの名称
         model (AbsModel)    : モデル
@@ -45,7 +42,8 @@ class WeatherStationForecastRunner(AbsRunner):
         # ディレクトリ名
         self._base_dir = os.getcwd()
         self._temp_dir = 'temp'
-        self._input_dir = 'input2'
+        self._input_dir = 'input4'
+        self._input2_dir = 'input2'
         self._output_dir = 'output'
         
         # クラス名
@@ -138,7 +136,7 @@ class WeatherStationForecastRunner(AbsRunner):
         if not (self._is_data_loaded):
         
             # 気象データを読み込み
-            loader = WeatherStationLoader(self._base_dir, self._temp_dir, self._input_dir)
+            loader = GsmLoader(self._base_dir, self._temp_dir, self._input_dir, self._input2_dir)
             df = loader.load()
             
             # NaNを置換する

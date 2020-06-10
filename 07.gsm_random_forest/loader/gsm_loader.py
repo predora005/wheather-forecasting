@@ -23,10 +23,13 @@ class GsmLoader(AbsLoader):
     ##################################################
     # コンストラクタ
     ##################################################
-    def __init__(self, base_dir, temp_dirname, input_dirname):
+    def __init__(self, base_dir, temp_dirname, input_dirname, input2_dirname):
         
         # 抽象クラスのコンストラクタ
         super().__init__(base_dir, temp_dirname, input_dirname)
+        
+        self._input2_dirname = input2_dirname
+        self._input2_dir = os.path.join(self._base_dir, self._input2_dirname)
         
     ##################################################
     # データをロードする
@@ -35,12 +38,16 @@ class GsmLoader(AbsLoader):
         
         # GSMデータをロードする
         gsm_df = gsm.load_gsm_csv(self._input_dir)
+        print(gsm_df.info())
         
         # 地上気象データをロードする
         groun_df = self._load_ground_weather(reload)
+        print(groun_df.info())
         
         # GSMデータと地上気象データをマージする
         df = pd.merge(gsm_df, groun_df, on=('日付','時'))
+        print(df.info())
+        df.to_csv('test.csv')
         
         return df
         
@@ -58,10 +65,9 @@ class GsmLoader(AbsLoader):
             # 保存したファイルを読み込む
             ground_df = pd.read_csv(ground_weather_csv, index_col=0, parse_dates=[1])
         else:
-            ground_dir = os.path.join(self._input_dir, 'ground_weather')
+            ground_dir = os.path.join(self._input2_dir, 'ground_weather')
             ground_df = wfile.get_ground_weather(ground_dir)
             ground_df.to_csv(ground_weather_csv)
-        
         
         # 3時,9時,15時,21時のデータを抽出する
         ground_df = wdfproc.extract_row_isin(ground_df, '時', [3, 9, 15, 21])
@@ -69,8 +75,11 @@ class GsmLoader(AbsLoader):
         # 天気を数値に変換する
         ground_df = wdfproc.convert_weather_to_interger(ground_df)
         
+        # 天気を所定の境界値で分類する
+        ground_df = wdfproc.replace_weather(ground_df, columns=['Mito_天気'])
+        
         # 水戸の天気を抽出する
-        ground_df = ground_df.loc[:, ['日時', '時', 'Mito_天気']]
+        ground_df = ground_df.loc[:, ['日付', '時', 'Mito_天気']]
         
         return ground_df
         

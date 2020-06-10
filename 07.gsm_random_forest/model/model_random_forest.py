@@ -20,7 +20,7 @@ class ModelRandomForest(AbsModel):
     def __init__(self, run_fold_name, params):
         
         # 抽象クラスのコンストラクタ
-        super(ModelRandomForest, self).__init__(run_fold_name, params)
+        super().__init__(run_fold_name, params)
         
         # ランダムフォレストの学習モデルを生成する
         self._model = RandomForestClassifier(n_estimators=1000, max_depth=20, random_state=1)
