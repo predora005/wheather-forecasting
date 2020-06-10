@@ -268,18 +268,14 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
         column_names = []
         values_array = np.empty(0)
         
-        # 指定気圧面のデータを取り出す
-        levels = get_gsm_mandatory_levels()
-        for level in levels:
+        # 指定気圧面のうち学習に用いるデータのみを取り出し、
+        # values_arrayに追加する
+        for grb in grbs:
             
-            # DEBUG
-            #print("==============================")
-            #print('level: {0:d}'.format(level))
+            # 指定気圧面のデータを取り出す
+            levels = get_gsm_mandatory_levels()
+            for level in levels:
             
-            # 指定気圧面のうち学習に用いるデータのみを取り出し、
-            # values_arrayに追加する
-            for grb in grbs:
-                
                 # 指定気圧面、初期時刻のデータ以外の場合は飛ばす
                 if (grb.level != level) or (grb.forecastTime != 0):
                     continue
@@ -297,8 +293,8 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
                 
                 # DEBUG
                 #print("==============================")
-                #print('Parameter name: {0:s}'.format(grb.parameterName))
-            
+                #print('Level:{0:d}, Parameter name: {1:s}'.format(level, grb.parameterName))
+                
                 # 指定した(緯度,経度)に含まれる格子点のデータを抽出する
                 #stop_watch.start()
                 lat_min, lat_max, lon_min, lon_max = get_gsm_latlons()
@@ -520,9 +516,11 @@ def gsm_grib2_to_csv(input_dir, output_dir, start_year, start_month, start_day, 
     # 指定した日数分のデータを読み込みCSCファイルに出力する
     for i in range(days):
         
-        gsm_pall_grib2_to_csv(input_dir, output_dir, date)
+        output_pall_dir = os.path.join(output_dir, 'pall')
+        gsm_pall_grib2_to_csv(input_dir, output_pall_dir, date)
         
-        gsm_surf_grib2_to_csv(input_dir, output_dir, date)
+        output_surf_dir = os.path.join(output_dir, 'surf')
+        gsm_surf_grib2_to_csv(input_dir, output_surf_dir, date)
         
         # 日付を更新する
         date = date + datetime.timedelta(days=1)
