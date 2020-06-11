@@ -7,6 +7,7 @@ import pandas as pd
 import gsm
 import wfile
 import wdfproc
+from wdfproc import WeatherConvertMode
 
 ##################################################
 # GSMデータロードクラス
@@ -38,15 +39,14 @@ class GsmLoader(AbsLoader):
         
         # GSMデータをロードする
         gsm_df = gsm.load_gsm_csv(self._input_dir)
-        print(gsm_df.info())
+        #print(gsm_df.info())
         
         # 地上気象データをロードする
-        groun_df = self._load_ground_weather(reload)
-        print(groun_df.info())
+        ground_df = self._load_ground_weather(reload)
         
         # GSMデータと地上気象データをマージする
-        df = pd.merge(gsm_df, groun_df, on=('日付','時'))
-        print(df.info())
+        df = pd.merge(gsm_df, ground_df, on=('日付','時'))
+        #print(df.info())
         df.to_csv('test.csv')
         
         return df
@@ -57,6 +57,7 @@ class GsmLoader(AbsLoader):
     def _load_ground_weather(self, reload):
         
         # 保存ファイルの有無を確認する
+        os.makedirs(self._temp_dir, exist_ok=True)
         ground_weather_csv = os.path.join(self._temp_dir, 'ground_weather.csv')
         exist_csv = os.path.isfile(ground_weather_csv)
         
@@ -74,12 +75,14 @@ class GsmLoader(AbsLoader):
     
         # 天気を数値に変換する
         ground_df = wdfproc.convert_weather_to_interger(ground_df)
+        #print(ground_df.info())
         
         # 天気を所定の境界値で分類する
         ground_df = wdfproc.replace_weather(ground_df, columns=['Mito_天気'])
+        #ground_df = wdfproc.replace_weather(ground_df, columns=['Mito_天気'], mode=WeatherConvertMode.RainOrNot)
         
         # 水戸の天気を抽出する
-        ground_df = ground_df.loc[:, ['日付', '時', 'Mito_天気']]
+        ground_df = ground_df.loc[:, ['日付', '時', 'Mito_海面気圧(hPa)', 'Mito_気温(℃)', 'Mito_湿度(％)', 'Mito_天気']]
         
         return ground_df
         

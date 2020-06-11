@@ -39,11 +39,15 @@ def print_accuracy(test_y, pred_y, class_names):
             if i == j:
                 # iクラスの正解率を表示する
                 if num_i > 0:
-                    acc = accuracy_score(class_y, pred_y_i)
+                    #acc = accuracy_score(class_y, pred_y_i)
+                    num_j = accuracy_score(class_y, pred_y_i, normalize=False)
+                    acc = num_j / num_i
                 else:
                     acc = 0
                     
-                print('    Accuracy({0:s}-{1:s}):{2:.3f}'.format(class_name, comp_name, acc))
+                #print('    Accuracy({0:s}-{1:s}):{2:.3f}'.format(class_name, comp_name, acc))
+                print('    Accuracy({0:s}-{1:s}):{2:.3f}  {3:d}/{4:d}'.format(
+                    class_name, comp_name, acc, num_j, num_i))
                 
             else:
                 # iクラスをjクラスと誤答した割合を表示する

@@ -23,7 +23,7 @@ class ModelRandomForest(AbsModel):
         super().__init__(run_fold_name, params)
         
         # ランダムフォレストの学習モデルを生成する
-        self._model = RandomForestClassifier(n_estimators=1000, max_depth=20, random_state=1)
+        self._model = RandomForestClassifier(n_estimators=2000, max_depth=30, random_state=1)
         
     ##################################################
     # 学習

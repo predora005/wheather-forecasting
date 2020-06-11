@@ -19,8 +19,9 @@ __WIND_DIRECTION_TO_ANGLE_MAP = {
 
 # 天気を変換する際のモード
 class WeatherConvertMode(Enum):
-    Coarse = 1  # 粗い
-    Fine = 2    # 細かい
+    Coarse = 1      # 粗い
+    Fine = 2        # 細かい
+    RainOrNot = 3   # 雨か否かの二者択一
 
 # 天気を整数値に変換するマップ
 __WEATHER_TO_INT_MAP = {
@@ -78,6 +79,20 @@ __WEATHER_REPLACE_MAP_FINE = {
     101:4,                  # 降水                          -> 雨
     5:  5, 6:  5, 7:  5,    # 煙霧, 砂じん嵐, 地ふぶき  -> その他
     15: 5, 0:  5            # 雷, 不明                  -> その他
+}
+
+# 天気を変換するマップ(雨か否かの二者択一)
+__WEATHER_REPLACE_MAP_RAIN_OR_NOT= {
+    1:  0, 2:  0,           # 快晴, 晴れ    -> 雨以外
+    3:  0, 4:  0,           # 薄曇, 曇り    -> 雨以外
+    8:  1, 9:  1, 10: 1,    # 霧, 霧雨, 雨                  -> 雨
+    11: 1, 12: 1, 13: 1,    # みぞれ, 雪, あられ            -> 雨
+    14: 1, 16: 1, 17: 1,    # ひょう, しゅう雨, 着氷性の雨  -> 雨
+    18: 1, 19: 1, 22: 1,    # 着氷性の霧雨, しゅう雪, 霧雪  -> 雨
+    23: 1, 24: 1, 28: 1,    # 凍雨, 細氷, もや              -> 雨
+    101:1,                  # 降水                          -> 雨
+    5:  0, 6:  0, 7:  0,    # 煙霧, 砂じん嵐, 地ふぶき  -> 雨以外
+    15: 0, 0:  0            # 雷, 不明                  -> 雨以外
 }
 
 # 雲量を浮動小数点数に変換するマップ
@@ -363,6 +378,8 @@ def replace_weather(df, rmap=None, columns=None, mode=WeatherConvertMode.Coarse,
     if rmap is None:
         if mode == WeatherConvertMode.Fine:
             rmap = __WEATHER_REPLACE_MAP_FINE
+        elif mode == WeatherConvertMode.RainOrNot:
+            rmap = __WEATHER_REPLACE_MAP_RAIN_OR_NOT
         else:
             rmap = __WEATHER_REPLACE_MAP_COARSE
     

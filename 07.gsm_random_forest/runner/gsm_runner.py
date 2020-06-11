@@ -64,7 +64,7 @@ class GsmForecastRunner(AbsRunner):
         self._load_data()
         
         #fold = StratifiedKFold(n_splits=3)
-        fold = KFold(n_splits=3)
+        fold = KFold(n_splits=4)
         for i, (train_index, test_index) in enumerate(fold.split(self._train_x, self._train_y)):
             
             # 訓練データを抽出する
@@ -123,10 +123,10 @@ class GsmForecastRunner(AbsRunner):
             
             # 特徴量の重要度を表示する
             self._show_importance_of_feature()
-
+            
             # Graphvizのグラフをファイルに出力する
             self._export_graphviz()
-
+            
     ##################################################
     # 学習・評価・予測用のデータをロードする
     ##################################################
@@ -159,14 +159,14 @@ class GsmForecastRunner(AbsRunner):
         data_y = df[label_name]
         
         # Xデータから末尾(最新時刻)のデータを削る
-        data_x = data_x.iloc[:-1,]
+        data_x = data_x.iloc[:-2,]
         
         # Yデータから先頭(最旧時刻)のデータを削る
-        data_y = data_y.iloc[1:,]
+        data_y = data_y.iloc[2:,]
         
         # 訓練データとテストデータに分割する
-        #train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=True)
-        train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=False, test_size=0.33)
+        train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=True)
+        #train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=False, test_size=0.33)
         
         return train_x, train_y, test_x, test_y
     
@@ -198,6 +198,6 @@ class GsmForecastRunner(AbsRunner):
         estimators = self._model.get_estimators()[0] 
         feature_names = self._train_x.columns
         class_names = self._class_names
-    
+        
         util.export_graphviz(file_path, estimators, feature_names, class_names)
         

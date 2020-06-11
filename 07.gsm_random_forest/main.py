@@ -2,7 +2,7 @@
 
 from model import ModelRandomForest
 from runner import GsmForecastRunner
-from sklearn.model_selection import StratifiedKFold
+#from sklearn.model_selection import StratifiedKFold
 
 ##################################################
 # メイン
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     runner = GsmForecastRunner(run_name, model, None)
     
     # クロスバリデーション実行
-    #runner.run_train_cv()
+    runner.run_train_cv()
     
     # 学習実行
     runner.run_train_all()
