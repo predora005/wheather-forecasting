@@ -6,6 +6,7 @@ import wdfproc
 from loader import GsmLoader
 import util
 import pandas as pd
+from model import ModelRandomForest, ModelXgboost
 
 from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
 
@@ -139,9 +140,14 @@ class GsmForecastRunner(AbsRunner):
             loader = GsmLoader(self._base_dir, self._temp_dir, self._input_dir, self._input2_dir)
             df = loader.load()
             
+            # 浮動小数点を32ビットに変更する
+            #if type(self._model) is ModelXgboost:
+            df = wdfproc.type_to_float32(df)
+            
             # NaNを置換する
-            df = df.fillna(-9999)
-    
+            if type(self._model) is ModelRandomForest:
+                df = df.fillna(-9999)
+            
             # 学習データ・テスト用データ作成
             self._train_x, self._train_y, self._test_x, self._test_y = \
                 self._make_training_data(df, 'Mito_天気')
@@ -175,10 +181,6 @@ class GsmForecastRunner(AbsRunner):
     ##################################################
     def _show_importance_of_feature(self):
         
-        # 重要度と特徴量の名称を取得する
-        importances = self._model.get_feature_importances()
-        feature_names = self._train_x.columns
-        
         # 出力ディレクトリを作成する
         output_dir = os.path.join(self._base_dir, self._output_dir)
         os.makedirs(output_dir, exist_ok=True)
@@ -186,18 +188,32 @@ class GsmForecastRunner(AbsRunner):
         # 出力先のファイルパスを設定する
         fig_path = os.path.join(output_dir, 'feature_importances.png')
         csv_path = os.path.join(output_dir, 'feature_importances.csv')
-
-        util.show_importance_of_feature(importances, feature_names, fig_path, csv_path)
-
+        
+        if type(self._model) is ModelRandomForest:
+            
+            # 重要度と特徴量の名称を取得する
+            importances = self._model.get_feature_importances()
+            feature_names = self._train_x.columns
+            
+            util.show_importance_of_feature(importances, feature_names, fig_path, csv_path)
+        
+        elif type(self._model) is ModelXgboost:
+            self._model.plot_feature_importances(fig_path)
+        
     ##################################################
     # Graphvizのグラフをファイルに出力する
     ##################################################
     def _export_graphviz(self):
         
         file_path = os.path.join(self._base_dir, self._output_dir, 'graphviz.png')
-        estimators = self._model.get_estimators()[0] 
-        feature_names = self._train_x.columns
-        class_names = self._class_names
         
-        util.export_graphviz(file_path, estimators, feature_names, class_names)
+        if type(self._model) is ModelRandomForest:
+            estimators = self._model.get_estimators()[0] 
+            feature_names = self._train_x.columns
+            class_names = self._class_names
+            
+            util.export_graphviz(file_path, estimators, feature_names, class_names)
+        
+        elif type(self._model) is ModelXgboost:
+            self._model.export_graphviz(file_path)
         

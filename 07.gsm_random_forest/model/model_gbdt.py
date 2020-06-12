@@ -1,12 +1,13 @@
 # coding: utf-8
 
 from .abs_model import AbsModel
-from sklearn.ensemble import RandomForestClassifier
+import xgboost as xgb
+import matplotlib.pyplot as plt
 
 ##################################################
 # ランダムフォレスト
 ##################################################
-class ModelRandomForest(AbsModel):
+class ModelXgboost(AbsModel):
     """ランダムフォレスト
         
     Attributes:
@@ -29,7 +30,8 @@ class ModelRandomForest(AbsModel):
         super().__init__(run_fold_name, params)
         
         # ランダムフォレストの学習モデルを生成する
-        self._model = RandomForestClassifier(n_estimators=2000, max_depth=30, random_state=1)
+        self._params = params
+        self._model = None
         
     ##################################################
     # 学習
@@ -41,8 +43,17 @@ class ModelRandomForest(AbsModel):
             train_x(DataFrame)  : 学習データ(入力)
             train_y(DataFrame)  : 学習データ(出力)
         """
-        self._model.fit(train_x, train_y)
-        #pred_y = self.predict(validate_x)
+        dtrain = xgb.DMatrix(train_x, label=train_y)
+        
+        num_round = 10000
+        evallist = [(dtrain, 'train')]
+        self._model = xgb.train(
+            self._params, dtrain, num_round, evallist, 
+            early_stopping_rounds=10, verbose_eval=10
+        )
+        #bst = xgb.train(param, dtrain, num_round, evallist, early_stopping_rounds=5)
+        #self._model = xgb.train(self._params, dtrain, num_round)
+        #evallist = [(dvalid, 'eval'), (dtrain, 'train')]
         
     ##################################################
     # 予測
@@ -56,7 +67,13 @@ class ModelRandomForest(AbsModel):
         Returns:
             DataFrame : テストデータ(出力)
         """
-        pred_y = self._model.predict(test_x)
+        dtest = xgb.DMatrix(test_x)
+        pred_y = self._model.predict(dtest)
+        
+        print('Best Score:{0:.4f}, Iteratin:{1:d}, Ntree_Limit:{2:d}'.format(
+                self._model.best_score, self._model.best_iteration, 
+                self._model.best_ntree_limit))
+        
         return pred_y
         
     ##################################################
@@ -76,15 +93,20 @@ class ModelRandomForest(AbsModel):
         raise NotImplementedError()
         
     ##################################################
-    # 特徴量の重要度を返す
+    # 特徴量の重要度をプロットする
     ##################################################
-    def get_feature_importances(self):
-        return self._model.feature_importances_
+    def plot_feature_importances(self, filepath):
+        xgb.plot_importance(self._model)
+        plt.savefig(filepath)
+        #return self._model.feature_importances_
         
     ##################################################
-    # 推定器を返す
+    # Graphvizのグラフをファイルに出力する
     ##################################################
-    def get_estimators(self):
-        return self._model.estimators_
+    def export_graphviz(self, filepath):
+        #xgb.to_graphviz(self._model, num_trees=1)
+        #xgb.plot_tree(bst, num_trees=2, ax=axes[0])
         
+        xgb.plot_tree(self._model, num_trees=1)
+        plt.savefig(filepath)
         
