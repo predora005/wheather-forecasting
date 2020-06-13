@@ -49,16 +49,6 @@ class ModelRandomForest(AbsModel):
             train_x(DataFrame)  : 学習データ(入力)
             train_y(DataFrame)  : 学習データ(出力)
         """
-        epoch = 0
-        for i in range(100):
-            model.fit(
-                train_input, train_label, 
-                epochs=100, batch_size=16, shuffle=False, verbose=0)
-            score = model.evaluate(test_input, test_label, verbose=0)
-            
-            epoch = epoch + 100
-            print('%07d : loss=%f, acc=%f' % (epoch, score[0], score[1]))
-            #print(model.metrics_names['accuracy'])
         self._model.fit(train_x, train_y)
         #pred_y = self.predict(validate_x)
         
