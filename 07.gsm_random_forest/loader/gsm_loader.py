@@ -38,19 +38,36 @@ class GsmLoader(AbsLoader):
     def load(self, reload=False):
         
         # GSMデータをロードする
-        gsm_df = gsm.load_gsm_csv(self._input_dir)
-        #print(gsm_df.info())
+        gsm_df = self._load_gsm_weather()
+        print(gsm_df.info())
         
         # 地上気象データをロードする
         ground_df = self._load_ground_weather(reload)
+        print(ground_df.info())
         
         # GSMデータと地上気象データをマージする
         df = pd.merge(gsm_df, ground_df, on=('日付','時'))
-        #print(df.info())
+        print(df.info())
         df.to_csv('test.csv')
         
         return df
         
+    ##################################################
+    # GSMデータを読み込む
+    ##################################################
+    def _load_gsm_weather(self):
+        
+        # GSMデータ(CSV)をロードする
+        gsm_df = gsm.load_gsm_csv(self._input_dir)
+        #print(gsm_df.info())
+        
+        # 不要な列を削る
+        drop_columns = ['高度', '東西風', '南北風', '地上気圧']
+        gsm_df = wdfproc.drop_columns(gsm_df, drop_columns)
+        #print(gsm_df.info())
+        
+        return gsm_df
+
     ##################################################
     # 地上気象データを読み込む
     ##################################################
@@ -81,8 +98,9 @@ class GsmLoader(AbsLoader):
         ground_df = wdfproc.replace_weather(ground_df, columns=['Mito_天気'])
         #ground_df = wdfproc.replace_weather(ground_df, columns=['Mito_天気'], mode=WeatherConvertMode.RainOrNot)
         
-        # 水戸の天気を抽出する
-        ground_df = ground_df.loc[:, ['日付', '時', 'Mito_海面気圧(hPa)', 'Mito_気温(℃)', 'Mito_湿度(％)', 'Mito_天気']]
+        # 水戸の天気,海面気圧,気温,湿度を抽出する
+        extract_columns = ['日付', '時', 'Mito_海面気圧(hPa)', 'Mito_気温(℃)', 'Mito_湿度(％)', 'Mito_天気']
+        ground_df = ground_df.loc[:, extract_columns]
         
         return ground_df
         

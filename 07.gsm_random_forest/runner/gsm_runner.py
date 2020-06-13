@@ -43,7 +43,7 @@ class GsmForecastRunner(AbsRunner):
         # ディレクトリ名
         self._base_dir = os.getcwd()
         self._temp_dir = 'temp'
-        self._input_dir = 'input4'
+        self._input_dir = 'input5'
         self._input2_dir = 'input2'
         self._output_dir = 'output'
         
@@ -123,9 +123,15 @@ class GsmForecastRunner(AbsRunner):
             util.print_accuracy(self._test_y, pred_y, self._class_names)
             
             # 特徴量の重要度を表示する
+            print('#################################')
+            print('  show_importance_of_feature...')
+            print('#################################')
             self._show_importance_of_feature()
             
             # Graphvizのグラフをファイルに出力する
+            print('#################################')
+            print('  export_graphviz...')
+            print('#################################')
             self._export_graphviz()
             
     ##################################################
@@ -134,7 +140,7 @@ class GsmForecastRunner(AbsRunner):
     def _load_data(self):
         
         # データ未読み込みの場合
-        if not (self._is_data_loaded):
+        if self._is_data_loaded == False:
         
             # 気象データを読み込み
             loader = GsmLoader(self._base_dir, self._temp_dir, self._input_dir, self._input2_dir)
@@ -142,6 +148,7 @@ class GsmForecastRunner(AbsRunner):
             
             # 浮動小数点を32ビットに変更する
             #if type(self._model) is ModelXgboost:
+            #    df = wdfproc.type_to_float32(df)
             df = wdfproc.type_to_float32(df)
             
             # NaNを置換する
@@ -152,7 +159,7 @@ class GsmForecastRunner(AbsRunner):
             self._train_x, self._train_y, self._test_x, self._test_y = \
                 self._make_training_data(df, 'Mito_天気')
                 
-            self.is_data_loaded = True
+            self._is_data_loaded = True
             
     ##################################################
     # 学習データ作成

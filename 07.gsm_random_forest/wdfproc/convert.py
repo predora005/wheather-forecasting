@@ -288,14 +288,30 @@ def type_to_float32(df, inplace=True):
     else:
         new_df = df.copy()
     
+    # 変換する列と型のディクショナリを作成する
+    astype_dict = {}
     for col in new_df.columns:
         typ = new_df[col].dtype
         if typ == object:
             # object -> np.float32
-            new_df = new_df.astype({col: np.float32})
+            astype_dict[col] = np.float32
         elif typ == np.float64:
             # np.float64 -> np.float32
-            new_df = new_df.astype({col: np.float32})
+            astype_dict[col] = np.float32
+            #new_df = new_df.astype({col: np.float32})
+    
+    # データ型を変換する
+    new_df = new_df.astype(astype_dict, copy=False)
+    
+    #for col in new_df.columns:
+    #    typ = new_df[col].dtype
+    #    if typ == object:
+    #        # object -> np.float32
+    #        new_df = new_df.astype({col: np.float32})
+    #    elif typ == np.float64:
+    #        print(col)
+    #        # np.float64 -> np.float32
+    #        new_df = new_df.astype({col: np.float32})
         
     return new_df
     
