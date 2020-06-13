@@ -38,7 +38,7 @@ class GsmLoader(AbsLoader):
     def load(self, reload=False):
         
         # GSMデータをロードする
-        gsm_df = self._load_gsm_weather()
+        gsm_df = self._load_gsm_weather(reload)
         print(gsm_df.info())
         
         # 地上気象データをロードする
@@ -55,19 +55,38 @@ class GsmLoader(AbsLoader):
     ##################################################
     # GSMデータを読み込む
     ##################################################
-    def _load_gsm_weather(self):
+    def _load_gsm_weather(self, reload):
         
         # GSMデータ(CSV)をロードする
-        gsm_df = gsm.load_gsm_csv(self._input_dir)
+        #gsm_df = gsm.load_gsm_csv(self._input_dir)
         #print(gsm_df.info())
         
+        # 保存ファイルの有無を確認する
+        os.makedirs(self._temp_dir, exist_ok=True)
+        gsm_csv = os.path.join(self._temp_dir, 'gsm.csv')
+        exist_csv = os.path.isfile(gsm_csv)
+        
+        if (reload == False) and (exist_csv == True):
+            # 読み込み済み、かつ、リロード無しの場合は、
+            # 保存したファイルを読み込む
+            gsm_df = pd.read_csv(gsm_csv, index_col=0, parse_dates=[1])
+        else:
+            #ground_dir = os.path.join(self._input2_dir, 'ground_weather')
+            #ground_df = wfile.get_ground_weather(ground_dir)
+            gsm_df = gsm.load_gsm_csv(self._input_dir)
+            gsm_df.to_csv(gsm_csv)
+        
         # 不要な列を削る
-        drop_columns = ['高度', '東西風', '南北風', '地上気圧']
+        drop_columns = [
+            '高度', '東西風', '南北風', '地上気圧', 
+            '下層雲量', '中層雲量', '上層雲量',
+            '積算降水量_06h', '積算降水量_12h', '積算降水量_24h'
+        ]
         gsm_df = wdfproc.drop_columns(gsm_df, drop_columns)
         #print(gsm_df.info())
         
         return gsm_df
-
+        
     ##################################################
     # 地上気象データを読み込む
     ##################################################

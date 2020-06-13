@@ -5,10 +5,10 @@ import xgboost as xgb
 import matplotlib.pyplot as plt
 
 ##################################################
-# ランダムフォレスト
+# XGBoost
 ##################################################
 class ModelXgboost(AbsModel):
-    """ランダムフォレスト
+    """ XGBoost
         
     Attributes:
         run_fold_name (string)  : ランとfoldを組み合わせた名称
@@ -29,7 +29,6 @@ class ModelXgboost(AbsModel):
         # 抽象クラスのコンストラクタ
         super().__init__(run_fold_name, params)
         
-        # ランダムフォレストの学習モデルを生成する
         self._params = params
         self._model = None
         
@@ -45,16 +44,18 @@ class ModelXgboost(AbsModel):
         """
         dtrain = xgb.DMatrix(train_x, label=train_y)
         
-        num_round = 10000
+        xgb_param = self._params['xgb_param']
+        num_round = self._params['num_round']
+        early_stopping_rounds = self._params['early_stopping_rounds']
+        verbose_eval = self._params['verbose_eval']
         evallist = [(dtrain, 'train')]
-        self._model = xgb.train(
-            self._params, dtrain, num_round, evallist, 
-            early_stopping_rounds=10, verbose_eval=10
-        )
-        #bst = xgb.train(param, dtrain, num_round, evallist, early_stopping_rounds=5)
-        #self._model = xgb.train(self._params, dtrain, num_round)
-        #evallist = [(dvalid, 'eval'), (dtrain, 'train')]
         
+        self._model = xgb.train(
+            xgb_param, dtrain, num_round, evallist, 
+            early_stopping_rounds = early_stopping_rounds, 
+            verbose_eval = verbose_eval
+        )
+
     ##################################################
     # 予測
     ##################################################

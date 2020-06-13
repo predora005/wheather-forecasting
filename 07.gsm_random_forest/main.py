@@ -9,16 +9,22 @@ from runner import GsmForecastRunner
 ##################################################
 if __name__ == '__main__':
     
+    # ランダムフォレスト
     run_name = 'Random Forest'
-    model = ModelRandomForest(run_name, None)
+    params = { 'n_estimators' : 2000, 'max_depth': 30, 'random_state':1 }
+    model = ModelRandomForest(run_name, params)
     
-    # モデル生成
+    # XGBoost
     #run_name = 'XGBoost'
     #xbg_param = {
     #    'max_depth': 4, 'eta': 0.05, 'subsample': 0.9, 
     #    'objective': 'multi:softmax', 'num_class': 4
     #}
-    #model = ModelXgboost(run_name, xbg_param)
+    #parmas = {
+    #    'xgb_param' : xbg_param, 'num_round' : 10000, 
+    #    'early_stopping_rounds' : 10, 'verbose_eval' : 10
+    #}
+    #model = ModelXgboost(run_name, parmas)
         
     # Runner生成
     #runner = WeatherStationForecastRunner(run_name, model, None)

@@ -585,10 +585,10 @@ if __name__ == '__main__':
     input_dir = os.path.join(cwd, 'input3')
     
     # 取得開始日付、取得する日数を設定する
-    year = 2017
-    month = 4
+    year = 2018
+    month = 12
     day = 1
-    days = 30
+    days = 31
     
     # GSMの過去データをダウンロードする
     download_gsm_files(input_dir, year, month, day, days)
