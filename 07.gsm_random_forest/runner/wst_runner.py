@@ -10,7 +10,7 @@ import util
 import wdfproc
 from loader import WeatherStationLoader
 from model import ModelRandomForest, ModelXgboost, ModelDnn
-from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
+from sklearn.model_selection import train_test_split, KFold
 
 ##################################################
 # 気象庁の気象観測所のデータを用いた
@@ -86,7 +86,7 @@ class WeatherStationForecastRunner(AbsRunner):
                 scaler, tx, vx = util.max_min_scale(tx, vx)
                 
             # 学習を行う
-            self._model.train(tx, ty)
+            self._model.train(tx, ty, vx, vy)
             
             # 予測を行う
             pred_y = self._model.predict(vx) 
@@ -186,8 +186,6 @@ class WeatherStationForecastRunner(AbsRunner):
                 df = util.fill_na_avg(df)
             elif type(self._model) is ModelRandomForest:
                 # ランダムフォレストの場合は-9999で置換する
-                #df = util.fill_na_avg(df)
-                #print(df.isnull().any())
                 df = df.fillna(-9999)
             elif type(self._model) is ModelXgboost:
                 # XGBoostの場合はNaNのままで問題無し

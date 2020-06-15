@@ -39,7 +39,6 @@ def fill_na_avg(df, inplace=True):
     # 変換する列と値のディクショナリを作成する
     fillna_dict = {}
     has_nan_columns = new_df.isnull().any()
-    print(has_nan_columns)
     for col in has_nan_columns.index:
         
         # NaNが含まれる列のみ変換対象とする
@@ -57,13 +56,6 @@ def fill_na_avg(df, inplace=True):
                 fillna_dict[col] = int(np.around(avg))
             
     # NaNを置換する
-    #for col in fillna_dict:
-    #    value = fillna_dict[col]
-    #    new_df[col] = new_df[col].fillna(value)
-        
-    # NaNを置換する
-    #print(fillna_dict)
-    #new_df = new_df.fillna(fillna_dict, inplace=True)
     new_df = new_df.fillna(fillna_dict)
     
     return new_df

@@ -50,11 +50,15 @@ if __name__ == '__main__':
         run_name = 'DNN'
         
         model_parmas = {
-            'units'             : [64, 32],
-            'learning_rate'     : 0.05,
-            'max_epoch'         : 10000,
-            'epochs'            : 1000,
-            'batch_size'        : 128
+            'units'                     : [128, 128],
+            'dropout_rates'             : [0.5, 0.5],
+            'learning_rate'             : 0.0001,
+            'kernel_initializer'        : 'he_normal',
+            'max_epoch'                 : 1000,
+            'epochs'                    : 100,
+            'batch_size'                : 32,
+            'validation_split'          : 0.1,
+            'early_stopping_patience'   : 90,
         }
         model = ModelDnn(run_name, model_parmas)
             
