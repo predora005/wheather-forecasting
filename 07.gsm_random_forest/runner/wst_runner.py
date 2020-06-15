@@ -1,13 +1,15 @@
 # coding: utf-8
 
 from .abs_runner import AbsRunner
+
 import os
-#import wfile
+import pandas as pd
+import keras
+
+import util
 import wdfproc
 from loader import WeatherStationLoader
-import util
-import pandas as pd
-
+from model import ModelRandomForest, ModelXgboost, ModelDnn
 from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
 
 ##################################################
@@ -43,13 +45,14 @@ class WeatherStationForecastRunner(AbsRunner):
         self._test_y = None
         
         # ディレクトリ名
-        self._base_dir = os.getcwd()
-        self._temp_dir = 'temp'
-        self._input_dir = 'input2'
-        self._output_dir = 'output'
+        self._base_dir = self._params['base_dir']
+        self._temp_dir = self._params['temp_dir']
+        self._input_dir = self._params['input_dir']
+        self._output_dir = self._params['output_dir']
         
         # クラス名
         self._class_names=['Sunny', 'Cloud', 'Rain', 'Other']
+        self._label_name = 'Mito_天気'
         
     ##################################################
     # foldを指定して学習・評価を行う
@@ -66,7 +69,7 @@ class WeatherStationForecastRunner(AbsRunner):
         self._load_data()
         
         #fold = StratifiedKFold(n_splits=3)
-        fold = KFold(n_splits=3)
+        fold = KFold(n_splits=3, shuffle=True)
         for i, (train_index, test_index) in enumerate(fold.split(self._train_x, self._train_y)):
             
             # 訓練データを抽出する
@@ -77,6 +80,11 @@ class WeatherStationForecastRunner(AbsRunner):
             vx = self._train_x.iloc[test_index]
             vy = self._train_y.iloc[test_index]
             
+            # モデルがDNNの場合はデータを正規化する
+            if type(self._model) is ModelDnn:
+                # Max-Minスケール化
+                scaler, tx, vx = util.max_min_scale(tx, vx)
+                
             # 学習を行う
             self._model.train(tx, ty)
             
@@ -88,7 +96,12 @@ class WeatherStationForecastRunner(AbsRunner):
             print('#################################')
             print('  {0:s}'.format(run_fold_name))
             print('#################################')
-            util.print_accuracy(vy, pred_y, self._class_names)
+            if type(self._model) is ModelDnn:
+                # モデルがDNNの場合はOne-Hotラベル表現用の正解率を表示する
+                vy_onehot = keras.utils.to_categorical(vy, num_classes=self._label_num)
+                util.print_accuracy_one_hot(vy_onehot, pred_y, self._class_names)
+            else:
+                util.print_accuracy(vy, pred_y, self._class_names)
             
     ##################################################
     # クロスバリデーションで学習した
@@ -101,8 +114,19 @@ class WeatherStationForecastRunner(AbsRunner):
     # 学習データ全てを使用して、学習を行う
     ##################################################
     def run_train_all(self):
+        
         self._load_data()
-        self._model.train(self._train_x, self._train_y)
+        
+        train_x, train_y = self._train_x, self._train_y
+        
+        # モデルがDNNの場合はデータを正規化する
+        if type(self._model) is ModelDnn:
+            
+            # Max-Minスケール化
+            self._train_all_scaler, train_x, _ = util.max_min_scale(train_x, None)
+            
+        #　学習実行
+        self._model.train(train_x, train_y)
         self.is_trained_all = True
     
     ##################################################
@@ -113,20 +137,35 @@ class WeatherStationForecastRunner(AbsRunner):
         # 全データで学習済みか
         if self.is_trained_all:
         
+            test_x = self._test_x
+            
+            # モデルがDNNの場合は学習時に使用したスケーラで正規化する
+            if type(self._model) is ModelDnn:
+                test_x = self._train_all_scaler.transform(test_x)
+            
             # 予測を行う
-            pred_y = self._model.predict(self._test_x)
-            self._pred_y = pred_y
+            pred_y = self._model.predict(test_x)
+            #self._pred_y = pred_y
             
             # 正解率を表示する
             print('#################################')
             print('  {0:s}'.format(self._run_name))
             print('#################################')
-            util.print_accuracy(self._test_y, pred_y, self._class_names)
+            if type(self._model) is ModelDnn:
+                # モデルがDNNの場合はOne-Hotラベル表現用の正解率を表示する
+                ty_onehot = keras.utils.to_categorical(self._test_y, num_classes=self._label_num)
+                util.print_accuracy_one_hot(ty_onehot, pred_y, self._class_names)
+            else:
+                util.print_accuracy(self._test_y, pred_y, self._class_names)
             
             # 特徴量の重要度を表示する
+            #print('#################################')
+            print('  show_importance_of_feature...')
             self._show_importance_of_feature()
 
             # Graphvizのグラフをファイルに出力する
+            #print('#################################')
+            print('  export_graphviz...')
             self._export_graphviz()
 
     ##################################################
@@ -142,13 +181,28 @@ class WeatherStationForecastRunner(AbsRunner):
             df = loader.load()
             
             # NaNを置換する
-            df = df.fillna(-9999)
+            if type(self._model) is ModelDnn:
+                # DNNの場合は平均値で置換する
+                df = util.fill_na_avg(df)
+            elif type(self._model) is ModelRandomForest:
+                # ランダムフォレストの場合は-9999で置換する
+                #df = util.fill_na_avg(df)
+                #print(df.isnull().any())
+                df = df.fillna(-9999)
+            elif type(self._model) is ModelXgboost:
+                # XGBoostの場合はNaNのままで問題無し
+                pass
     
             # 学習データ・テスト用データ作成
             self._train_x, self._train_y, self._test_x, self._test_y = \
-                self._make_training_data(df, 'Mito_天気')
+                self._make_training_data(df, self._label_name)
                 
-            self.is_data_loaded = True
+            # ラベル数をモデルに渡す
+            self._label_num = self._train_y.nunique()
+            self._model.add_param('label_num', self._label_num)
+            
+            # データ読み込みフラグをTrueにする
+            self._is_data_loaded = True
             
     ##################################################
     # 学習データ作成
@@ -177,29 +231,37 @@ class WeatherStationForecastRunner(AbsRunner):
     ##################################################
     def _show_importance_of_feature(self):
         
-        # 重要度と特徴量の名称を取得する
-        importances = self._model.get_feature_importances()
-        feature_names = self._train_x.columns
-        
-        # 出力ディレクトリを作成する
-        output_dir = os.path.join(self._base_dir, self._output_dir)
-        os.makedirs(output_dir, exist_ok=True)
-        
-        # 出力先のファイルパスを設定する
-        fig_path = os.path.join(output_dir, 'feature_importances.png')
-        csv_path = os.path.join(output_dir, 'feature_importances.csv')
-
-        util.show_importance_of_feature(importances, feature_names, fig_path, csv_path)
+        # ランダムフォレストとXGBoostの場合h
+        if  (type(self._model) is ModelRandomForest) or \
+            (type(self._model) is ModelXgboost):
+            
+            # 重要度と特徴量の名称を取得する
+            importances = self._model.get_feature_importances()
+            feature_names = self._train_x.columns
+            
+            # 出力ディレクトリを作成する
+            output_dir = os.path.join(self._base_dir, self._output_dir)
+            os.makedirs(output_dir, exist_ok=True)
+            
+            # 出力先のファイルパスを設定する
+            fig_path = os.path.join(output_dir, 'feature_importances.png')
+            csv_path = os.path.join(output_dir, 'feature_importances.csv')
+    
+            util.show_importance_of_feature(importances, feature_names, fig_path, csv_path)
 
     ##################################################
     # Graphvizのグラフをファイルに出力する
     ##################################################
     def _export_graphviz(self):
         
-        file_path = os.path.join(self._base_dir, self._output_dir, 'graphviz.png')
-        estimators = self._model.get_estimators()[0] 
-        feature_names = self._train_x.columns
-        class_names = self._class_names
-    
-        util.export_graphviz(file_path, estimators, feature_names, class_names)
+        # ランダムフォレストとXGBoostの場合
+        if  (type(self._model) is ModelRandomForest) or \
+            (type(self._model) is ModelXgboost):
+            
+            file_path = os.path.join(self._base_dir, self._output_dir, 'graphviz.png')
+            estimators = self._model.get_estimators()[0] 
+            feature_names = self._train_x.columns
+            class_names = self._class_names
+        
+            util.export_graphviz(file_path, estimators, feature_names, class_names)
         

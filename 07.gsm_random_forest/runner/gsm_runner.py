@@ -2,11 +2,10 @@
 
 from .abs_runner import AbsRunner
 import os
-import wdfproc
 from loader import GsmLoader
 import util
 import pandas as pd
-from model import ModelRandomForest, ModelXgboost
+from model import ModelRandomForest, ModelXgboost, ModelDnn
 
 from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
 
@@ -65,7 +64,7 @@ class GsmForecastRunner(AbsRunner):
         self._load_data()
         
         #fold = StratifiedKFold(n_splits=3)
-        fold = KFold(n_splits=4)
+        fold = KFold(n_splits=4, shuffle=True)
         for i, (train_index, test_index) in enumerate(fold.split(self._train_x, self._train_y)):
             
             # 訓練データを抽出する
@@ -125,13 +124,11 @@ class GsmForecastRunner(AbsRunner):
             # 特徴量の重要度を表示する
             print('#################################')
             print('  show_importance_of_feature...')
-            print('#################################')
             self._show_importance_of_feature()
             
             # Graphvizのグラフをファイルに出力する
             print('#################################')
             print('  export_graphviz...')
-            print('#################################')
             self._export_graphviz()
             
     ##################################################
@@ -147,9 +144,7 @@ class GsmForecastRunner(AbsRunner):
             df = loader.load()
             
             # 浮動小数点を32ビットに変更する
-            #if type(self._model) is ModelXgboost:
-            #    df = wdfproc.type_to_float32(df)
-            df = wdfproc.type_to_float32(df)
+            df = util.type_to_float32(df)
             
             # NaNを置換する
             if type(self._model) is ModelRandomForest:

@@ -33,30 +33,53 @@ class ModelDnn(AbsModel):
         super().__init__(run_fold_name, params)
         
         self._params = params
+
+        self._dnn_units = self._params['units']
+        self._learning_rate = self._params['learning_rate']
+        self._max_epoch = self._params['max_epoch']
+        self._epochs = self._params['epochs']
+        self._batch_size = self._params['batch_size']
         
-        input_dim = self._params['input_dim']
+        #label_num = self._params['label_num']
+        #learning_rate = self._params['learning_rate']
+        
+        self._model = None
+        
+    ##################################################
+    # モデル作成
+    ##################################################
+    def _create_model(self, data_x, data_y):
+        
+        # モデル未作成の場合
+        #if self._is_model_crated == False:
+            
+        input_dim = data_x.shape[1]
         label_num = self._params['label_num']
-        units = self._params['units']
         learning_rate = self._params['learning_rate']
-        
+        units = self._dnn_units
+            
         # DNNの学習モデルを生成する
         model = Sequential()
-        model.add(Dense(units[0], input_dim=input_data_dim))
+        model.add(Dense(units[0], input_dim=input_dim))
         model.add(Activation('relu'))
-        for i in range(1, len(units.len):
+        for i in range(1, len(units)):
             model.add(Dense(units[i]))
             model.add(Activation('relu'))
+            
         model.add(Dense(label_num))
         model.add(Activation('softmax'))
         
+        # 最適化アルゴリズムを設定する
         optimizer = optimizers.Adam(lr=learning_rate)
         model.compile(
             optimizer=optimizer,
             loss='categorical_crossentropy',
             metrics=['accuracy'])
         
-        self._model = None
+        self._model = model
         
+            #self._is_model_crated = True
+
     ##################################################
     # 学習
     ##################################################
@@ -68,24 +91,32 @@ class ModelDnn(AbsModel):
             train_y(DataFrame)  : 学習データ(出力)
         """
         
-        label_num = self._params['label_num']
-        one_hot_labels = keras.utils.to_categorical(train_y, num_classes=label_num)
+        # モデルを生成する
+        self._create_model(train_x, train_y)
         
+        # ラベルをOne-Hot Labelに変換する
+        label_num = self._params['label_num']
+        label_onehot = keras.utils.to_categorical(train_y, num_classes=label_num)
+        
+        # self._max_epoch回数分、学習を実行する
         epoch = 0
-        for i in range(100):
-            model.fit(
-                train_input, train_label, 
-                epochs=100, batch_size=16, shuffle=False, verbose=0)
-
-            score = model.evaluate(test_input, test_label, verbose=0)
+        num_loop = int(numpy.ceil(self._max_epoch / self._epochs))
+        for i in range(num_loop):
+            
+            # 学習
+            self._model.fit(
+                train_x, label_onehot, 
+                epochs=self._epochs, batch_size=self._batch_size, shuffle=False, verbose=0)
+            
+            # epochを更新する
+            epoch = epoch + self._epochs
+            
+            # 損失値と正解率を表示する
+            score = self._model.evaluate(train_x, label_onehot, verbose=0)
             loss = score[0]
             acc = score[1]
             print('%07d : loss=%f, acc=%f' % (epoch, loss, acc))            
             
-            epoch = epoch + 100
-            print('%07d : loss=%f, acc=%f' % (epoch, score[0], score[1]))
-            #print(model.metrics_names['accuracy'])
-        
     ##################################################
     # 予測
     ##################################################
@@ -98,7 +129,7 @@ class ModelDnn(AbsModel):
         Returns:
             DataFrame : テストデータ(出力)
         """
-        pred_y = None
+        pred_y = self._model.predict(test_x)
         return pred_y
         
     ##################################################

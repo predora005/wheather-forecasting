@@ -253,7 +253,7 @@ def convert_cloud_volume_to_float(df, inplace=True):
         new_df = df
     else:
         new_df = df.copy()
-
+    
     # 雲量を浮動小数点数に変換する
     def to_float(name):
         value = 0.0
@@ -270,51 +270,6 @@ def convert_cloud_volume_to_float(df, inplace=True):
     
     return new_df
 
-##################################################
-# 浮動小数点を32ビットに変更する
-##################################################
-def type_to_float32(df, inplace=True):
-    """ 浮動小数点を32ビットに変更する
-
-    Args:
-        df(DataFrame) : 変換対象のDataFrame
-        inplace(bool) : 元のDataFrameを変更するか否か
-
-    Returns:
-        DataFrame : 変換後のDataFrame
-    """
-    if inplace:
-        new_df = df
-    else:
-        new_df = df.copy()
-    
-    # 変換する列と型のディクショナリを作成する
-    astype_dict = {}
-    for col in new_df.columns:
-        typ = new_df[col].dtype
-        if typ == object:
-            # object -> np.float32
-            astype_dict[col] = np.float32
-        elif typ == np.float64:
-            # np.float64 -> np.float32
-            astype_dict[col] = np.float32
-            #new_df = new_df.astype({col: np.float32})
-    
-    # データ型を変換する
-    new_df = new_df.astype(astype_dict, copy=False)
-    
-    #for col in new_df.columns:
-    #    typ = new_df[col].dtype
-    #    if typ == object:
-    #        # object -> np.float32
-    #        new_df = new_df.astype({col: np.float32})
-    #    elif typ == np.float64:
-    #        print(col)
-    #        # np.float64 -> np.float32
-    #        new_df = new_df.astype({col: np.float32})
-        
-    return new_df
-    
 ##################################################
 # 天気を指定した境界値で分類する
 ##################################################

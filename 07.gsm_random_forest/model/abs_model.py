@@ -48,4 +48,11 @@ class AbsModel(metaclass=ABCMeta):
     def load_model(self):
         raise NotImplementedError()
         
+    ##################################################
+    # パラメータを追加する
+    ##################################################
+    #@abstractmethod
+    def add_param(self, key, value):
+        self._params[key] = value
+        
         

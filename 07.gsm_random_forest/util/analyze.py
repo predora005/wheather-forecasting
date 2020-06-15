@@ -65,6 +65,66 @@ def print_accuracy(test_y, pred_y, class_names):
                 print('    Failure ({0:s}-{1:s}):{2:.3f}  {3:d}/{4:d}'.format(
                     class_name, comp_name, rate_fail, num_j, num_i))
                 
+
+##################################################
+# 正解率を表示する(One-Hotラベル用)
+##################################################
+def print_accuracy_one_hot(test_y, pred_y, class_names):
+    
+    num_class = len(class_names)
+    
+    # 正解率を表示する
+    result = np.where(np.argmax(test_y, axis=1)==np.argmax(pred_y, axis=1), 1, 0)
+    acc = np.mean(result)
+    print('Accuracy:{0:.3f}'.format(acc))
+    
+    # クラスごとの正解率を表示する
+    for i, class_name in enumerate(class_names):
+        
+        class_idx = np.where(np.argmax(test_y, axis=1)==i)
+        class_y = test_y[class_idx]     # クラスiの正解データ
+        pred_y_i = pred_y[class_idx]    # クラスiの予測データ
+        
+        print( '  ## {0:s}'.format(class_name) )
+        
+        # iの正解率と不正解率を表示する
+        for j in range(num_class):
+            
+            comp_name = class_names[j]  # 比較するクラス
+            num_i = class_y.shape[0]    # iクラスの正解データ数
+            
+            if i == j:
+                # iクラスの正解率を表示する
+                if num_i > 0:
+                    result = np.where(np.argmax(class_y, axis=1)==np.argmax(pred_y_i, axis=1), 1, 0)
+                    num_j = np.sum(result)
+                    acc = np.mean(result)
+                    #num_j = accuracy_score(class_y, pred_y_i, normalize=False)
+                    #acc = num_j / num_i
+                else:
+                    acc = 0
+                    
+                print('    Accuracy({0:s}-{1:s}):{2:.3f}  {3:d}/{4:d}'.format(
+                    class_name, comp_name, acc, num_j, num_i))
+                
+            else:
+                # iクラスをjクラスと誤答した割合を表示する
+                
+                # iクラスが正解だが、jと分類してしまったデータ
+                result = np.where(np.argmax(pred_y_i, axis=1) == j, 1, 0)
+                num_j = np.sum(result)
+                #fail_y_j = np.where(pred_y_i == j)[0]
+                #num_j = fail_y_j.size
+                
+                # 不正解率を表示する
+                if num_i > 0:
+                    rate_fail = num_j / num_i
+                else:
+                    rate_fail = 0
+                
+                print('    Failure ({0:s}-{1:s}):{2:.3f}  {3:d}/{4:d}'.format(
+                    class_name, comp_name, rate_fail, num_j, num_i))
+
 ##################################################
 # 特徴量の重要度を表示する
 ##################################################

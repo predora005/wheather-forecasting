@@ -107,7 +107,7 @@ class GsmLoader(AbsLoader):
             ground_df.to_csv(ground_weather_csv)
         
         # 3時,9時,15時,21時のデータを抽出する
-        ground_df = wdfproc.extract_row_isin(ground_df, '時', [3, 9, 15, 21])
+        ground_df = util.extract_row_isin(ground_df, '時', [3, 9, 15, 21])
     
         # 天気を数値に変換する
         ground_df = wdfproc.convert_weather_to_interger(ground_df)

@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import wfile
 import wdfproc
+import util
 
 ##################################################
 # 気象庁の気象観測データロードクラス
@@ -78,12 +79,12 @@ class WeatherStationLoader(AbsLoader):
     def _preprocess_ground_weather(self, ground_df):
         
         # 9時と21時のデータを抽出する
-        ground_df = wdfproc.extract_row_isin(ground_df, '時', [9, 21])
+        ground_df = util.extract_row_isin(ground_df, '時', [9, 21])
         
         # 天気記号を数値に変換する
         ground_df = wdfproc.convert_symbol_to_number(ground_df)
         
-        # 地上気象データからNaNが含まれる列を削る
+        # 地上気象データから不要データを除去する
         ground_df = wdfproc.drop_unneeded_ground(ground_df)
 
         # 風速・風向きを数値に変換する
@@ -107,7 +108,7 @@ class WeatherStationLoader(AbsLoader):
         ground_df = wdfproc.replace_weather(ground_df, columns=[label_name])
 
         # 浮動小数点数を32ビットに変換する
-        ground_df = wdfproc.type_to_float32(ground_df)
+        ground_df = util.type_to_float32(ground_df)
 
         # 不要な列を除去する
         ground_df = wdfproc.drop_columns(
@@ -116,10 +117,12 @@ class WeatherStationLoader(AbsLoader):
             #  '降雪', '積雪', '雲量', '視程', '全天日射', '降水量', '風速' ]
             [ '現地気圧', '海面気圧', '気温', '露点温度', '蒸気圧', '日照時間', 
               '降雪', '積雪', '雲量', '視程', '全天日射', '降水量' ]
+            #[ '現地気圧', '海面気圧', '気温', '露点温度', '蒸気圧', '日照時間', 
+            #  '降雪', '積雪', '視程', '全天日射' ]
         )
-
+        
         print(ground_df.info())
-    
+        
         return ground_df
 
     ##################################################
@@ -154,7 +157,7 @@ class WeatherStationLoader(AbsLoader):
         highrise_df = wdfproc.convert_wind_to_vector_highrise(highrise_df)
 
         # 浮動小数点数を32ビットに変換する
-        highrise_df = wdfproc.type_to_float32(highrise_df)
+        highrise_df = util.type_to_float32(highrise_df)
 
         # 不要な列を除去する
         highrise_df = wdfproc.drop_columns(
