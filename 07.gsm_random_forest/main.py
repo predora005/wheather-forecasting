@@ -39,26 +39,24 @@ if __name__ == '__main__':
         }
         model_parmas = {
             'xgb_param' : xbg_param, 'num_round' : 10000, 
-            'early_stopping_rounds' : 10, 'verbose_eval' : 10
+            'early_stopping_rounds' : 20, 'verbose_eval' : 50
         }
         model = ModelXgboost(run_name, model_parmas)
     
     ##############################
     elif model_kind == ModelKind.DNN:
         # DNN
-        
         run_name = 'DNN'
-        
         model_parmas = {
-            'units'                     : [128, 128],
+            'units'                     : [64, 64],
             'dropout_rates'             : [0.5, 0.5],
             'learning_rate'             : 0.0001,
             'kernel_initializer'        : 'he_normal',
-            'max_epoch'                 : 1000,
-            'epochs'                    : 100,
+            'max_epoch'                 : 5000,
+            'epochs'                    : 50,
             'batch_size'                : 32,
             'validation_split'          : 0.1,
-            'early_stopping_patience'   : 90,
+            'early_stopping_patience'   : 50,
         }
         model = ModelDnn(run_name, model_parmas)
             
@@ -84,7 +82,6 @@ if __name__ == '__main__':
             'output_dir'    :  'output'
         }
         runner = GsmForecastRunner(run_name, model, runner_param)
-    
     
     # クロスバリデーション実行
     #runner.run_train_cv()

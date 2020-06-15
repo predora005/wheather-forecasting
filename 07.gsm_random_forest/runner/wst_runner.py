@@ -7,9 +7,9 @@ import pandas as pd
 import keras
 
 import util
-import wdfproc
 from loader import WeatherStationLoader
 from model import ModelRandomForest, ModelXgboost, ModelDnn
+
 from sklearn.model_selection import train_test_split, KFold
 
 ##################################################
@@ -136,7 +136,6 @@ class WeatherStationForecastRunner(AbsRunner):
         
         # 全データで学習済みか
         if self.is_trained_all:
-        
             test_x = self._test_x
             
             # モデルがDNNの場合は学習時に使用したスケーラで正規化する
@@ -190,7 +189,7 @@ class WeatherStationForecastRunner(AbsRunner):
             elif type(self._model) is ModelXgboost:
                 # XGBoostの場合はNaNのままで問題無し
                 pass
-    
+            
             # 学習データ・テスト用データ作成
             self._train_x, self._train_y, self._test_x, self._test_y = \
                 self._make_training_data(df, self._label_name)
@@ -220,7 +219,7 @@ class WeatherStationForecastRunner(AbsRunner):
         
         # 訓練データとテストデータに分割する
         #train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=True)
-        train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=False, test_size=0.33)
+        train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=False, test_size=0.25)
         
         return train_x, train_y, test_x, test_y
     
@@ -229,7 +228,7 @@ class WeatherStationForecastRunner(AbsRunner):
     ##################################################
     def _show_importance_of_feature(self):
         
-        # ランダムフォレストとXGBoostの場合h
+        # ランダムフォレストとXGBoostの場合
         if  (type(self._model) is ModelRandomForest) or \
             (type(self._model) is ModelXgboost):
             

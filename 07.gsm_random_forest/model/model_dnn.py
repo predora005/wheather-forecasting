@@ -100,19 +100,20 @@ class ModelDnn(AbsModel):
         if (validate_x is not None) and (validate_y is not None):
             vy_onehot = keras.utils.to_categorical(validate_y, num_classes=label_num)
             validation_data = [validate_x, vy_onehot] 
-            validation_split = 0
+            #validation_split = 0
         else:
             validation_split = self._params['validation_split']
-            train_x, validate_x, train_y_onehot, vy_onehot = train_test_split(train_x, train_y_onehot, shuffle=True, test_size=validation_split)
+            train_x, validate_x, train_y_onehot, vy_onehot = train_test_split(
+                train_x, train_y_onehot, shuffle=True, test_size=validation_split)
             validation_data = [validate_x, vy_onehot]
-            validation_split = 0
+            #validation_split = 0
             #validation_data = None
             #validation_split = self._params['validation_split']
             
         # Early Stopping
         #   patience: 指定した回数改善しなければ終了
         early_stopping = keras.callbacks.EarlyStopping(
-            monitor='val_loss', min_delta=0, patience=early_stopping_patience, 
+            monitor='loss', min_delta=0, patience=early_stopping_patience, 
             verbose=1, mode='auto')
         
         # self._max_epoch回数分、学習を実行する

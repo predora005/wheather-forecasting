@@ -132,12 +132,12 @@ def show_importance_of_feature(importances, feature_names, png_file=None, csv_fi
     
     feature_importances = pd.DataFrame(importances, index=feature_names, columns=['Importance'])
     feature_importances = feature_importances.sort_values(by='Importance', ascending=False)
-    feature_importances.plot(kind='bar', figsize=(20,20))
-    
-    if png_file is not None:
-        plt.savefig(png_file, bbox_inches='tight')
     
     if csv_file is not None:
         feature_importances.to_csv(csv_file)
+    
+    if png_file is not None:
+        feature_importances.plot(kind='bar', figsize=(20,20))
+        plt.savefig(png_file, bbox_inches='tight')
     
     
