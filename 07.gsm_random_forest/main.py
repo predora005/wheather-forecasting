@@ -20,7 +20,7 @@ class RunnerKind(Enum):
 if __name__ == '__main__':
     
     model_kind = ModelKind.DNN
-    runner_kind = RunnerKind.WeatherStationForecast
+    runner_kind = RunnerKind.GsmForecastRunner
     
     ##############################
     if model_kind == ModelKind.RandomForest:
@@ -48,15 +48,16 @@ if __name__ == '__main__':
         # DNN
         run_name = 'DNN'
         model_parmas = {
+            #'units'                     : [2048, 32],
             'units'                     : [64, 64],
             'dropout_rates'             : [0.5, 0.5],
-            'learning_rate'             : 0.0001,
+            'learning_rate'             : 0.00001,
             'kernel_initializer'        : 'he_normal',
-            'max_epoch'                 : 5000,
+            'max_epoch'                 : 1000,
             'epochs'                    : 50,
             'batch_size'                : 32,
             'validation_split'          : 0.1,
-            'early_stopping_patience'   : 50,
+            'early_stopping_patience'   : 40,
         }
         model = ModelDnn(run_name, model_parmas)
             

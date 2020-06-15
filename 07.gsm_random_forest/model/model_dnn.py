@@ -6,7 +6,7 @@ import numpy as np
 import keras
 from keras import optimizers
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Dropout
+from keras.layers import Dense, Activation, Dropout, LeakyReLU
 from sklearn.model_selection import train_test_split
 #import matplotlib.pyplot as plt
 
@@ -53,11 +53,11 @@ class ModelDnn(AbsModel):
         # DNNの学習モデルを生成する
         model = Sequential()
         model.add(Dense(units[0], input_dim=input_dim, kernel_initializer=kernel_initializer))
-        model.add(Activation('relu'))
+        model.add(LeakyReLU())
         model.add(Dropout(rate=dropout_rates[0]))
         for i in range(1, len(units)):
             model.add(Dense(units[i], kernel_initializer=kernel_initializer))
-            model.add(Activation('relu'))
+            model.add(LeakyReLU())
             model.add(Dropout(rate=dropout_rates[i]))
             
         model.add(Dense(label_num))
@@ -106,14 +106,11 @@ class ModelDnn(AbsModel):
             train_x, validate_x, train_y_onehot, vy_onehot = train_test_split(
                 train_x, train_y_onehot, shuffle=True, test_size=validation_split)
             validation_data = [validate_x, vy_onehot]
-            #validation_split = 0
-            #validation_data = None
-            #validation_split = self._params['validation_split']
-            
+
         # Early Stopping
         #   patience: 指定した回数改善しなければ終了
         early_stopping = keras.callbacks.EarlyStopping(
-            monitor='loss', min_delta=0, patience=early_stopping_patience, 
+            monitor='val_loss', min_delta=0, patience=early_stopping_patience, 
             verbose=1, mode='auto')
         
         # self._max_epoch回数分、学習を実行する
