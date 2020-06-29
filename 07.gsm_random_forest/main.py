@@ -19,7 +19,9 @@ class RunnerKind(Enum):
 ##################################################
 if __name__ == '__main__':
     
-    model_kind = ModelKind.DNN
+    #model_kind = ModelKind.DNN
+    #runner_kind = RunnerKind.WeatherStationForecast
+    model_kind = ModelKind.RandomForest
     runner_kind = RunnerKind.GsmForecastRunner
     
     ##############################

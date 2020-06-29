@@ -59,10 +59,6 @@ class GsmLoader(AbsLoader):
     ##################################################
     def _load_gsm_weather(self, reload):
         
-        # GSMデータ(CSV)をロードする
-        #gsm_df = gsm.load_gsm_csv(self._input_dir)
-        #print(gsm_df.info())
-        
         # 保存ファイルの有無を確認する
         os.makedirs(self._temp_dir, exist_ok=True)
         gsm_csv = os.path.join(self._temp_dir, 'gsm.csv')
@@ -73,9 +69,8 @@ class GsmLoader(AbsLoader):
             # 保存したファイルを読み込む
             gsm_df = pd.read_csv(gsm_csv, index_col=0, parse_dates=[1])
         else:
-            #ground_dir = os.path.join(self._input2_dir, 'ground_weather')
-            #ground_df = wfile.get_ground_weather(ground_dir)
             gsm_df = gsm.load_gsm_csv(self._input_dir)
+            gsm_df = gsm.thin_out_gsm(gsm_df, interval=(2,2))
             gsm_df.to_csv(gsm_csv)
         
         # 不要な列を削る
