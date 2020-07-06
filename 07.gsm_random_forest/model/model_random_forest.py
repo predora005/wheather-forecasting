@@ -1,7 +1,10 @@
 # coding: utf-8
 
 from .abs_model import AbsModel
+
+import os
 from sklearn.ensemble import RandomForestClassifier
+import joblib
 
 ##################################################
 # ランダムフォレスト
@@ -28,8 +31,10 @@ class ModelRandomForest(AbsModel):
         # 抽象クラスのコンストラクタ
         super().__init__(run_fold_name, params)
         
+        # ディレクトリ名
+        self._model_dir = self._params['model_dir']
+        
         # ランダムフォレストの学習モデルを生成する
-        self._params = params
         n_estimators = self._params['n_estimators']
         max_depth = self._params['max_depth']
         random_state = self._params['random_state']
@@ -70,10 +75,13 @@ class ModelRandomForest(AbsModel):
     ##################################################
     # モデルをファイルに保存する
     ##################################################
-    def save_model(self):
+    def save_model(self, ):
         """ モデルをファイルに保存する
         """
-        raise NotImplementedError()
+        os.makedirs(self._model_dir, exist_ok=True)
+        file_name = "{0:s}.joblib".format(self._run_fold_name)
+        file_path = os.path.join(self._model_dir, file_name)
+        joblib.dump(self._model, file_path)
         
     ##################################################
     # モデルをファイルからロードする
@@ -81,7 +89,9 @@ class ModelRandomForest(AbsModel):
     def load_model(self):
         """ モデルをファイルからロードする
         """
-        raise NotImplementedError()
+        file_name = "{0:s}.joblib".format(self._run_fold_name)
+        file_path = os.path.join(self._model_dir, file_name)
+        self._model = joblib.dump(file_path)
         
     ##################################################
     # 特徴量の重要度を返す

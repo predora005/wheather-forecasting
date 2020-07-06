@@ -67,8 +67,7 @@ class GsmForecastRunner(AbsRunner):
         # データをロードする
         self._load_data()
         
-        #fold = StratifiedKFold(n_splits=3)
-        fold = KFold(n_splits=4, shuffle=True)
+        fold = KFold(n_splits=3, shuffle=True)
         for i, (train_index, test_index) in enumerate(fold.split(self._train_x, self._train_y)):
             
             # 訓練データを抽出する
@@ -101,7 +100,7 @@ class GsmForecastRunner(AbsRunner):
                 util.print_accuracy_one_hot(vy_onehot, pred_y, self._class_names)
             else:
                 util.print_accuracy(vy, pred_y, self._class_names)
-            
+                
     ##################################################
     # クロスバリデーションで学習した
     # 各foldモデルの平均で予測を行う
@@ -122,10 +121,13 @@ class GsmForecastRunner(AbsRunner):
         if type(self._model) is ModelDnn:
             # Max-Minスケール化
             self._train_all_scaler, train_x, _ = util.max_min_scale(train_x, None)
-        
+
         self._model.train(train_x, train_y)
         self.is_trained_all = True
     
+        # 学習モデルを保存する
+        self._model.save_model()
+            
     ##################################################
     # 学習データ全てを学習したモデルで、テストデータの予測を行う
     ##################################################
@@ -139,9 +141,9 @@ class GsmForecastRunner(AbsRunner):
             # モデルがDNNの場合は学習時に使用したスケーラで正規化する
             if type(self._model) is ModelDnn:
                 test_x = self._train_all_scaler.transform(test_x)
-        
+            
             # 予測を行う
-            pred_y = self._model.predict(self._test_x)
+            pred_y = self._model.predict(test_x)
             self._pred_y = pred_y
             
             # 正解率を表示する
@@ -220,7 +222,7 @@ class GsmForecastRunner(AbsRunner):
         
         # 訓練データとテストデータに分割する
         #train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=True)
-        train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=False, test_size=0.5)
+        train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=False, test_size=0.33)
         
         return train_x, train_y, test_x, test_y
     

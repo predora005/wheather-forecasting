@@ -2,10 +2,11 @@
 
 from .abs_model import AbsModel
 
+import os
 import numpy as np
 import keras
 from keras import optimizers
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Dense, Activation, Dropout, LeakyReLU
 from sklearn.model_selection import train_test_split
 #import matplotlib.pyplot as plt
@@ -35,7 +36,9 @@ class ModelDnn(AbsModel):
         # 抽象クラスのコンストラクタ
         super().__init__(run_fold_name, params)
         
-        self._params = params
+        # ディレクトリ名
+        self._model_dir = self._params['model_dir']
+        
         self._model = None
         
     ##################################################
@@ -63,7 +66,10 @@ class ModelDnn(AbsModel):
         model.add(Dense(label_num))
         model.add(Activation('softmax'))
         
+        model.summary()
+        
         # 最適化アルゴリズムを設定する
+        #optimizer = optimizers.SGD(lr=learning_rate)
         optimizer = optimizers.Adam(lr=learning_rate)
         model.compile(
             optimizer=optimizer,
@@ -95,7 +101,7 @@ class ModelDnn(AbsModel):
         # ラベルをOne-Hot Labelに変換する
         label_num = self._params['label_num']
         train_y_onehot = keras.utils.to_categorical(train_y, num_classes=label_num)
-        
+
         # バリデーション用のパラメータ設定
         if (validate_x is not None) and (validate_y is not None):
             vy_onehot = keras.utils.to_categorical(validate_y, num_classes=label_num)
@@ -117,6 +123,13 @@ class ModelDnn(AbsModel):
         epoch = 0
         num_loop = int(np.ceil(max_epoch / epochs))
         for i in range(num_loop):
+            
+            #l0 = self._model.layers[0].get_weights()
+            #l3 = self._model.layers[3].get_weights()
+            #l6 = self._model.layers[6].get_weights()
+            #print(l0)
+            #print(l3)
+            #print(l6)
             
             # 学習
             self._model.fit(
@@ -141,7 +154,7 @@ class ModelDnn(AbsModel):
                 
             print('%07d : loss=%f, acc=%f val_loss=%f, val_acc=%f' % 
                     (epoch, loss, acc, val_loss, val_acc))
-            
+                    
             # Early Stoppingが行われていればループを離脱する
             if early_stopping.stopped_epoch > 0:
                 break
@@ -167,7 +180,10 @@ class ModelDnn(AbsModel):
     def save_model(self):
         """ モデルをファイルに保存する
         """
-        raise NotImplementedError()
+        os.makedirs(self._model_dir, exist_ok=True)
+        file_name = "{0:s}.h5".format(self._run_fold_name)
+        file_path = os.path.join(self._model_dir, file_name)
+        self._model.save(file_path)
         
     ##################################################
     # モデルをファイルからロードする
@@ -175,5 +191,7 @@ class ModelDnn(AbsModel):
     def load_model(self):
         """ モデルをファイルからロードする
         """
-        raise NotImplementedError()
+        file_name = "{0:s}.h5".format(self._run_fold_name)
+        file_path = os.path.join(self._model_dir, file_name)
+        self._model = load_model(file_path)
         

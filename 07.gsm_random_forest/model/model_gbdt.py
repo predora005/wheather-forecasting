@@ -1,6 +1,8 @@
 # coding: utf-8
 
 from .abs_model import AbsModel
+
+import os
 import xgboost as xgb
 import matplotlib.pyplot as plt
 
@@ -29,7 +31,9 @@ class ModelXgboost(AbsModel):
         # 抽象クラスのコンストラクタ
         super().__init__(run_fold_name, params)
         
-        self._params = params
+        # ディレクトリ名
+        self._model_dir = self._params['model_dir']
+        
         self._model = None
         
     ##################################################
@@ -83,7 +87,10 @@ class ModelXgboost(AbsModel):
     def save_model(self):
         """ モデルをファイルに保存する
         """
-        raise NotImplementedError()
+        os.makedirs(self._model_dir, exist_ok=True)
+        file_name = "{0:s}.model".format(self._run_fold_name)
+        file_path = os.path.join(self._model_dir, file_name)
+        self._model.save_model(file_path)
         
     ##################################################
     # モデルをファイルからロードする
@@ -91,8 +98,11 @@ class ModelXgboost(AbsModel):
     def load_model(self):
         """ モデルをファイルからロードする
         """
-        raise NotImplementedError()
-        
+        file_name = "{0:s}.model".format(self._run_fold_name)
+        file_path = os.path.join(self._model_dir, file_name)
+        self._model = xgb.Booster({'nthread': 1})
+        self._model.load_model(file_path)
+
     ##################################################
     # 特徴量の重要度をプロットする
     ##################################################

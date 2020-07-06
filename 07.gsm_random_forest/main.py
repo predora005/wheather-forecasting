@@ -21,45 +21,50 @@ if __name__ == '__main__':
     
     #model_kind = ModelKind.DNN
     #runner_kind = RunnerKind.WeatherStationForecast
-    model_kind = ModelKind.RandomForest
+    model_kind = ModelKind.DNN
     runner_kind = RunnerKind.GsmForecastRunner
     
     ##############################
     if model_kind == ModelKind.RandomForest:
         # ランダムフォレスト
-        run_name = 'Random Forest'
-        model_params = { 'n_estimators' : 2000, 'max_depth': 30, 'random_state':1 }
+        run_name = 'random_forest'
+        model_params = { 
+            'n_estimators' : 2000, 'max_depth': 30, 'random_state':1,
+            'model_dir' : 'model'
+        }
         model = ModelRandomForest(run_name, model_params)
     
     ##############################
     elif model_kind == ModelKind.XGBoost:
         # XGBoost
-        run_name = 'XGBoost'
+        run_name = 'xgboost'
         xbg_param = {
             'max_depth': 4, 'eta': 0.05, 'subsample': 0.9, 
             'objective': 'multi:softmax', 'num_class': 4
         }
         model_parmas = {
-            'xgb_param' : xbg_param, 'num_round' : 10000, 
-            'early_stopping_rounds' : 20, 'verbose_eval' : 50
+            'xgb_param' : xbg_param, 'num_round' : 1000, 
+            'early_stopping_rounds' : 20, 'verbose_eval' : 50,
+            'model_dir' : 'model'
         }
         model = ModelXgboost(run_name, model_parmas)
     
     ##############################
     elif model_kind == ModelKind.DNN:
         # DNN
-        run_name = 'DNN'
+        run_name = 'dnn'
         model_parmas = {
-            #'units'                     : [2048, 32],
-            'units'                     : [64, 64],
+            'units'                     : [1024, 256],
             'dropout_rates'             : [0.5, 0.5],
-            'learning_rate'             : 0.00001,
+            'learning_rate'             : 0.0001,
             'kernel_initializer'        : 'he_normal',
-            'max_epoch'                 : 1000,
-            'epochs'                    : 50,
-            'batch_size'                : 32,
+            #'kernel_initializer'        : 'random_uniform',
+            'max_epoch'                 : 10000,
+            'epochs'                    : 100,
+            'batch_size'                : 128,
             'validation_split'          : 0.1,
-            'early_stopping_patience'   : 40,
+            'early_stopping_patience'   : 80,
+            'model_dir'                 : 'model'
         }
         model = ModelDnn(run_name, model_parmas)
             
