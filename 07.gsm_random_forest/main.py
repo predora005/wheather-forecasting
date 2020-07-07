@@ -21,7 +21,7 @@ if __name__ == '__main__':
     
     #model_kind = ModelKind.DNN
     #runner_kind = RunnerKind.WeatherStationForecast
-    model_kind = ModelKind.DNN
+    model_kind = ModelKind.RandomForest
     runner_kind = RunnerKind.GsmForecastRunner
     
     ##############################
@@ -60,10 +60,10 @@ if __name__ == '__main__':
             'kernel_initializer'        : 'he_normal',
             #'kernel_initializer'        : 'random_uniform',
             'max_epoch'                 : 10000,
-            'epochs'                    : 100,
+            'epochs'                    : 50,
             'batch_size'                : 128,
             'validation_split'          : 0.1,
-            'early_stopping_patience'   : 80,
+            'early_stopping_patience'   : 40,
             'model_dir'                 : 'model'
         }
         model = ModelDnn(run_name, model_parmas)

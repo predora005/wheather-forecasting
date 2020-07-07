@@ -50,7 +50,7 @@ class GsmLoader(AbsLoader):
         # GSMデータと地上気象データをマージする
         df = pd.merge(gsm_df, ground_df, on=('日付','時'))
         print(df.info())
-        df.to_csv('test.csv')
+        #df.to_csv('test.csv')
         
         return df
         
@@ -70,14 +70,14 @@ class GsmLoader(AbsLoader):
             gsm_df = pd.read_csv(gsm_csv, index_col=0, parse_dates=[1])
         else:
             gsm_df = gsm.load_gsm_csv(self._input_dir)
-            gsm_df = gsm.thin_out_gsm(gsm_df)
+            gsm_df = gsm.thin_out_gsm(gsm_df, interval=(2,2))
             gsm_df.to_csv(gsm_csv)
         
         # 不要な列を削る
         drop_columns = [
             '高度', '東西風', '南北風', '地上気圧', 
-        #    '下層雲量', '中層雲量', '上層雲量',
-        #    '積算降水量_06h', '積算降水量_12h', '積算降水量_24h'
+            '下層雲量', '中層雲量', '上層雲量',
+            '積算降水量_06h', '積算降水量_12h', '積算降水量_24h'
         ]
         gsm_df = wdfproc.drop_columns(gsm_df, drop_columns)
 
