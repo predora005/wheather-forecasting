@@ -83,11 +83,14 @@ if __name__ == '__main__':
     elif runner_kind == RunnerKind.GsmForecastRunner:
         # GSMデータを用いた学習・評価・予測 実行クラス
         runner_param = {
-            'base_dir'      :  os.getcwd(),
-            'temp_dir'      : 'temp',
-            'input_dir'     : 'input5',
-            'input2_dir'    : 'input2',
-            'output_dir'    :  'output'
+            'base_dir'              : os.getcwd(),
+            'temp_dir'              : 'temp',
+            'input_dir'             : 'input5',
+            'input2_dir'            : 'input2',
+            'output_dir'            :  'output',
+            'gsm_thinout_interval'  : (4,4),
+            'weather_convert_mode'  : 'default'
+            #'weather_convert_mode'  : 'rain_or_not'
         }
         runner = GsmForecastRunner(run_name, model, runner_param)
     

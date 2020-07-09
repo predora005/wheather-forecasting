@@ -71,3 +71,23 @@ def thin_out_gsm(df, interval=(2,2), inplace=True):
     new_df = new_df[new_columns]
     
     return new_df
+
+##################################################
+# 天気記号を数値に変換する
+##################################################
+def add_difference_surface_and_pall(df, inplace=True):
+    """ 天気記号を数値に変換する
+
+    Args:
+        df(DataFrame) : 変換対象のDataFrame
+        inplace(bool) : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    return new_df

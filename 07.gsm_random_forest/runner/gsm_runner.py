@@ -48,7 +48,13 @@ class GsmForecastRunner(AbsRunner):
         self._input_dir = self._params['input_dir']
         self._input2_dir = self._params['input2_dir']
         self._output_dir = self._params['output_dir']
-
+        
+        # GSMデータを間引く間隔
+        self._gsm_thinout_interval = self._params['gsm_thinout_interval']
+        
+        # 天気を変換する際のモード
+        self._weather_convert_mode = self._params['weather_convert_mode']
+        
         # クラス名
         self._class_names=['Sunny', 'Cloud', 'Rain', 'Other']
         self._label_name = 'Mito_天気'
@@ -177,7 +183,9 @@ class GsmForecastRunner(AbsRunner):
         if self._is_data_loaded == False:
         
             # 気象データを読み込み
-            loader = GsmLoader(self._base_dir, self._temp_dir, self._input_dir, self._input2_dir)
+            loader = GsmLoader(
+                self._base_dir, self._temp_dir, self._input_dir, 
+                self._input2_dir, self._gsm_thinout_interval, self._weather_convert_mode)
             df = loader.load()
             
             # 浮動小数点を32ビットに変更する
