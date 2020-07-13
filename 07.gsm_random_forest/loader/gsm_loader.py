@@ -45,10 +45,10 @@ class GsmLoader(AbsLoader):
         
         # GSMデータをロードする
         gsm_df = self._load_gsm_weather(reload)
-        print(gsm_df.info())
         
         # GSMデータに前処理を施す
         gsm_df = self._process_gsm_weather(gsm_df)
+        print(gsm_df.info())
         
         # 地上気象データをロードする
         ground_df = self._load_ground_weather(reload)
@@ -88,6 +88,7 @@ class GsmLoader(AbsLoader):
     def _process_gsm_weather(self, df):
         
         # 地表と指定気圧面の差を追加する
+        #gsm_df = df
         gsm_df = gsm.add_difference_surface_and_pall(df)
 
         # 不要な列を削る

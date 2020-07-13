@@ -88,9 +88,13 @@ if __name__ == '__main__':
             'input_dir'             : 'input5',
             'input2_dir'            : 'input2',
             'output_dir'            :  'output',
-            'gsm_thinout_interval'  : (4,4),
-            'weather_convert_mode'  : 'default'
-            #'weather_convert_mode'  : 'rain_or_not'
+            'gsm_thinout_interval'  : (5,5),
+            'weather_convert_mode'  : 'default',
+            'class_names'           : ['Sunny', 'Cloud', 'Rain', 'Other'],
+            #'weather_convert_mode'  : 'rain_or_not',
+            #'class_names'           : ['Except for Rain', 'Rain'],
+            'label_name'            : 'Mito_天気'
+            
         }
         runner = GsmForecastRunner(run_name, model, runner_param)
     

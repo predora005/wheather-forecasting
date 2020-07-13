@@ -56,8 +56,8 @@ class GsmForecastRunner(AbsRunner):
         self._weather_convert_mode = self._params['weather_convert_mode']
         
         # クラス名
-        self._class_names=['Sunny', 'Cloud', 'Rain', 'Other']
-        self._label_name = 'Mito_天気'
+        self._class_names = self._params['class_names']
+        self._label_name = self._params['label_name']
         
     ##################################################
     # foldを指定して学習・評価を行う

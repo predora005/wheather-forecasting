@@ -94,3 +94,23 @@ def type_to_float32(df, inplace=True):
     
     return new_df
     
+##################################################
+# 時間変化量をDataFrameに追加する
+##################################################
+def add_time_variation(df, inplace=True):
+    """ 時間変化量をDataFrameに追加する
+
+    Args:
+        df(DataFrame) : 変換対象のDataFrame
+        inplace(bool) : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    return new_df
+    
