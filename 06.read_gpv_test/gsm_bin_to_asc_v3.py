@@ -140,10 +140,10 @@ def is_parameter_important_in_gsm_surf(param_name):
     param_important = [
         'Pressure reduced to MSL'       ,   # 海面更正気圧
         'Pressure'                      ,   # 地上気圧
-        '10 metre U wind component'     ,   # 東西風
-        '10 metre V wind component'     ,   # 南北風
-        '2 metre temperature'           ,   # 気温
-        '2 metre relative humidity'     ,   # 相対湿度
+        'u-component of wind'           ,   # 東西風
+        'v-component of wind'           ,   # 南北風
+        'Temperature'                   ,   # 気温
+        'Relative humidity'             ,   # 相対湿度
         'Low cloud cover'               ,   # 下層雲量
         'Medium cloud cover'            ,   # 中層雲量
         'High cloud cover'              ,   # 上層雲量
@@ -585,10 +585,10 @@ if __name__ == '__main__':
     input_dir = os.path.join(cwd, 'input3')
     
     # 取得開始日付、取得する日数を設定する
-    year = 2018
-    month = 12
+    year = 2017
+    month = 1
     day = 1
-    days = 31
+    days = 1
     
     # GSMの過去データをダウンロードする
     download_gsm_files(input_dir, year, month, day, days)
