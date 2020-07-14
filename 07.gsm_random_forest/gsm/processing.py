@@ -93,11 +93,7 @@ def add_difference_surface_and_pall(df, inplace=True):
     latitudes, longitudes = _get_latitudes_and_longitudes(new_df)
     pressure_surfaces = _get_pressure_surfaces(new_df)
     features = _get_features(new_df)
-    print(latitudes)
-    print(longitudes)
-    print(pressure_surfaces)
-    print(features)
-    
+
     for latitude in latitudes:          # 緯度のループ
         for longitude in longitudes:    # 経度のループ
             for feature in features:    # 特徴量のループ
@@ -106,8 +102,6 @@ def add_difference_surface_and_pall(df, inplace=True):
                 surface_column = "Surf_lat{0:s}_long{1:s}_{2:s}".format(
                     latitude, longitude, feature)
                     
-                print(surface_column)
-                    
                 # 指定した列名が含まれない場合はcontinue
                 if not(surface_column  in new_df.columns):
                     continue
@@ -115,15 +109,13 @@ def add_difference_surface_and_pall(df, inplace=True):
                 for pressure_surface in pressure_surfaces:  # 指定気圧面のループ
                     
                     # 指定気圧面の列名を作成
-                    psurface_column = "{0:s}_lat{1:s}_long{2:s}_{3:s}".format(
+                    psurface_column = "{0:s}hPa_lat{1:s}_long{2:s}_{3:s}".format(
                         pressure_surface, latitude, longitude, feature)
                     
                     # 新しい列名を作成
-                    new_column = "{0:s}-Surf_lat{1:s}_long{2:s}_{3:s}".format(
+                    new_column = "{0:s}hPa-Surf_lat{1:s}_long{2:s}_{3:s}".format(
                         pressure_surface, latitude, longitude, feature)
                     
-                    print(surface_column, psurface_column, new_column)
-                
                     new_df[new_column] = new_df[psurface_column] - new_df[surface_column]
                 
     return new_df
