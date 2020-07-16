@@ -97,12 +97,13 @@ def type_to_float32(df, inplace=True):
 ##################################################
 # 時間変化量をDataFrameに追加する
 ##################################################
-def add_time_variation(df, inplace=True):
+def add_time_variation(df, exclude_columns=['時', '日付'], inplace=True):
     """ 時間変化量をDataFrameに追加する
 
     Args:
-        df(DataFrame) : 変換対象のDataFrame
-        inplace(bool) : 元のDataFrameを変更するか否か
+        df(DataFrame)           : 変換対象のDataFrame
+        exclude_columns(list)   : 変換対象から除外する列
+        inplace(bool)           : 元のDataFrameを変更するか否か
 
     Returns:
         DataFrame : 変換後のDataFrame
@@ -111,6 +112,37 @@ def add_time_variation(df, inplace=True):
         new_df = df
     else:
         new_df = df.copy()
+    
+    # 列名のリストを取得する。
+    columns = new_df.columns
+    
+    # リストから指定した列を除外する
+    #columns.remove(exclude_columns)
+
+    for column in columns:
+        
+        # 指定した列は対象外とする
+        if column in exclude_columns:
+            continue
+        
+        # 新しい列名を作成する
+        new_column = '{0:s}_d1'.format(column)
+        
+        # 既存列のインデックス番号を取得する
+        #index = new_df.columns.get_loc(column)
+        
+        # 時間変化量の列を作成
+        #new_df[new_column] = new_df.iloc[1:, index] - new_df.iloc[0:-1, index]
+        new_df[new_column] = new_df[column].diff()
+        
+        #if column == '500hPa_lat34.80_long141.000_相対湿度':
+            #print(new_df[column].diff())
+            #print(new_df.iloc[1:, index])
+            #print(new_df.iloc[0:-1, index])
+            #print(index, column, new_column)
+            #print(column, new_df.iloc[-3, index], new_df.iloc[-2, index])
+    
+    print(new_df.head(10))
     
     return new_df
     

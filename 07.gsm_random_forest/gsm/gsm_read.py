@@ -50,6 +50,9 @@ def load_gsm_csv_one_dir(dir_path):
     # 指定ディレクトリのCSVファイル一覧取得
     file_paths = util.get_file_paths(dir_path, '.csv')
     
+    # 退避用のリスト作成
+    gsm_df_list = []
+    
     # GSMデータを読み込み、DataFrameに格納する
     gsm_df = None
     for file_path in file_paths:
@@ -62,6 +65,25 @@ def load_gsm_csv_one_dir(dir_path):
             gsm_df = df
         else:
             gsm_df = gsm_df.append(df)
+        
+        # DataFrameに一定の行数データが溜まったらリストに退避する
+        if len(gsm_df) > 256:
+            gsm_df_list.append(gsm_df)
+            gsm_df = None
+    
+    # リストに溜まったDataFrameを結合する
+    if len(gsm_df_list) > 0:
+        
+        # リスト内のDataFrameを結合する
+        list_df = gsm_df_list[0].copy()
+        for i in range(1, len(gsm_df_list)):
+            list_df = list_df.append(gsm_df_list[i])
+    
+        # リストに登録していないDataFrameを結合する
+        if gsm_df is not None:
+            list_df = list_df.append(gsm_df)
+            
+        gsm_df = list_df
     
     return gsm_df
     

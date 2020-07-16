@@ -230,7 +230,7 @@ class GsmForecastRunner(AbsRunner):
         
         # 訓練データとテストデータに分割する
         #train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=True)
-        train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=False, test_size=0.33)
+        train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=False, test_size=0.25)
         
         return train_x, train_y, test_x, test_y
     

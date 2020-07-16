@@ -85,7 +85,7 @@ if __name__ == '__main__':
         runner_param = {
             'base_dir'              : os.getcwd(),
             'temp_dir'              : 'temp',
-            'input_dir'             : 'input5',
+            'input_dir'             : 'input6',
             'input2_dir'            : 'input2',
             'output_dir'            :  'output',
             'gsm_thinout_interval'  : (4,4),

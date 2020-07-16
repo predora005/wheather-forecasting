@@ -45,6 +45,7 @@ class GsmLoader(AbsLoader):
         
         # GSMデータをロードする
         gsm_df = self._load_gsm_weather(reload)
+        #gsm_df = self._load_gsm_weather_for_concat(reload)
         
         # GSMデータに前処理を施す
         gsm_df = self._process_gsm_weather(gsm_df)
@@ -57,8 +58,7 @@ class GsmLoader(AbsLoader):
         # GSMデータと地上気象データをマージする
         df = pd.merge(gsm_df, ground_df, on=('日付','時'))
         print(df.info())
-        #df.to_csv('test.csv')
-        
+
         return df
         
     ##################################################
@@ -75,6 +75,9 @@ class GsmLoader(AbsLoader):
             # 読み込み済み、かつ、リロード無しの場合は、
             # 保存したファイルを読み込む
             gsm_df = pd.read_csv(gsm_csv, index_col=0, parse_dates=[1])
+            # DEBUG
+            #gsm_df = gsm.thin_out_gsm(gsm_df, interval=self._thinout_interval)
+            #gsm_df.to_csv(os.path.join(self._temp_dir, 'gsm_intv.csv'))
         else:
             gsm_df = gsm.load_gsm_csv(self._input_dir)
             gsm_df = gsm.thin_out_gsm(gsm_df, interval=self._thinout_interval)
@@ -85,19 +88,27 @@ class GsmLoader(AbsLoader):
     ##################################################
     # GSMデータに前処理を施す
     ##################################################
-    def _process_gsm_weather(self, df):
+    def _process_gsm_weather(self, gsm_df):
         
-        # 地表と指定気圧面の差を追加する
-        #gsm_df = df
-        gsm_df = gsm.add_difference_surface_and_pall(df)
-
         # 不要な列を削る
         drop_columns = [
             '高度', '東西風', '南北風', '地上気圧', 
-            '下層雲量', '中層雲量', '上層雲量',
-            '積算降水量_06h', '積算降水量_12h', '積算降水量_24h'
+            '全雲量', '下層雲量',  '中層雲量', 
+            '積算降水量_03h', '積算降水量_06h', '積算降水量_12h',
+        #    '高度', '地上気圧', 
+        #    '全雲量', '下層雲量', 
+        #    '積算降水量_03h', '積算降水量_06h',
+        #    '高度', '東西風', '南北風', '地上気圧', 
+        #    '下層雲量', '中層雲量', '上層雲量',
+        #    '積算降水量_03h', '積算降水量_06h', '積算降水量_12h',
         ]
         gsm_df = wdfproc.drop_columns(gsm_df, drop_columns)
+
+        # 地表と指定気圧面の差を追加する
+        #gsm_df = gsm.add_difference_surface_and_pall(gsm_df)
+        
+        # 時間変化量を追加する
+        #gsm_df = util.add_time_variation(gsm_df)
 
         return gsm_df
     
@@ -140,4 +151,36 @@ class GsmLoader(AbsLoader):
         ground_df = ground_df.loc[:, extract_columns]
         
         return ground_df
+        
+    ##################################################
+    # GSMデータを読み込む(2016年と2017-2019年のCSV結合用)
+    ##################################################
+    def _load_gsm_weather_for_concat(self, reload):
+
+        os.makedirs(self._temp_dir, exist_ok=True)
+        gsm_csv1 = os.path.join(self._temp_dir, 'gsm_intv_1x1.csv1')
+        gsm_csv2 = os.path.join(self._temp_dir, 'gsm_intv_1x1.csv2')
+        
+        gsm_df1 = pd.read_csv(gsm_csv1, index_col=0, parse_dates=[1])
+        gsm_df2 = pd.read_csv(gsm_csv2, index_col=0, parse_dates=[1])
+        
+        gsm_df = pd.concat([gsm_df1, gsm_df2], ignore_index=True)
+        gsm_csv = os.path.join(self._temp_dir, 'gsm.csv')
+        gsm_df.to_csv(gsm_csv)
+
+        # 保存ファイルの有無を確認する
+        os.makedirs(self._temp_dir, exist_ok=True)
+        gsm_csv = os.path.join(self._temp_dir, 'gsm.csv')
+        exist_csv = os.path.isfile(gsm_csv)
+        
+        if (reload == False) and (exist_csv == True):
+            # 読み込み済み、かつ、リロード無しの場合は、
+            # 保存したファイルを読み込む
+            gsm_df = pd.read_csv(gsm_csv, index_col=0, parse_dates=[1])
+        else:
+            gsm_df = gsm.load_gsm_csv(self._input_dir)
+            gsm_df = gsm.thin_out_gsm(gsm_df, interval=self._thinout_interval)
+            gsm_df.to_csv(gsm_csv)
+        
+        return gsm_df
         

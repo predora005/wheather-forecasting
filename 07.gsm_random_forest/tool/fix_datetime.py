@@ -87,7 +87,7 @@ if __name__ == '__main__':
         pall_csv = os.path.join(after_pall, pall_file)
         
         # CSVに出力する
-        #surf_df.to_csv(surf_csv)
+        surf_df.to_csv(surf_csv)
         pall_df.to_csv(pall_csv)
         
         # 日付を更新する
