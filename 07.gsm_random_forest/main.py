@@ -99,7 +99,7 @@ if __name__ == '__main__':
         runner = GsmForecastRunner(run_name, model, runner_param)
     
     # クロスバリデーション実行
-    runner.run_train_cv()
+    #runner.run_train_cv()
     
     # 学習実行
     runner.run_train_all()

@@ -72,17 +72,17 @@ def thin_out_gsm(df, interval=(2,2), inplace=True):
     return new_df
 
 ##################################################
-# 天気記号を数値に変換する
+# 地表と指定気圧面の特徴量の差をDataFrameに追加する
 ##################################################
 def add_difference_surface_and_pall(df, inplace=True):
-    """ 天気記号を数値に変換する
+    """ 地表と指定気圧面の特徴量の差をDataFrameに追加する
 
     Args:
-        df(DataFrame) : 変換対象のDataFrame
+        df(DataFrame) : 変更対象のDataFrame
         inplace(bool) : 元のDataFrameを変更するか否か
 
     Returns:
-        DataFrame : 変換後のDataFrame
+        DataFrame : 変更後のDataFrame
     """
     if inplace:
         new_df = df
@@ -120,6 +120,66 @@ def add_difference_surface_and_pall(df, inplace=True):
                 
     return new_df
 
+##################################################
+# 指定した緯度,経度のデータを抽出する
+##################################################
+def extract_latitude_and_longitude(df, latitudes, longitudes, inplace=True):
+    """ 指定した緯度,経度のデータを抽出する
+
+    Args:
+        df(DataFrame)       : 変更対象のDataFrame
+        latitudes(tuple)    : 緯度の範囲
+        longitudes(tuple)   : 経度の範囲
+        inplace(bool)       : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変更後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    # 緯度,経度を取り出す
+    st_lat = latitudes[0]
+    ed_lat = latitudes[1]
+    st_long = longitudes[0]
+    ed_long = longitudes[1]
+    
+    # 列名のリストを用意する
+    new_columns = ['日付', '時']
+    
+    for column in df.columns:
+        
+        # 地表データを抽出する
+        #   (ex)'Surf_lat38.00_long135.000_海面更正気圧'
+        result = re.search(r"Surf_lat(\d+\.\d+)_long(\d+\.\d+)_(.*)", column)
+        if result:
+            latitude = float(result.group(1))
+            longitude = float(result.group(2))
+            
+            # 指定した緯度,経度のデータであれば、列をリストに格納する
+            if (st_lat <= latitude) and (latitude <= ed_lat):
+                if (st_long <= longitude) and (longitude <= ed_long):
+                    new_columns.append(column)
+            
+        # 指定気圧面データを抽出する
+        #   (ex)'850hPa_lat38.00_long135.000_気温'
+        result = re.search(r"(\d+)hPa_lat(\d+\.\d+)_long(\d+\.\d+)_(.*)", column)
+        if result:
+            latitude = float(result.group(2))
+            longitude = float(result.group(3))
+            
+            # 指定した緯度,経度のデータであれば、列をリストに格納する
+            if (st_lat <= latitude) and (latitude <= ed_lat):
+                if (st_long <= longitude) and (longitude <= ed_long):
+                    new_columns.append(column)
+            
+    # 指定した列のみのDataFrameを作成する
+    new_df = new_df[new_columns]
+    
+    return new_df
+    
 ##################################################
 # 緯度と経度の一覧を取得する
 ##################################################

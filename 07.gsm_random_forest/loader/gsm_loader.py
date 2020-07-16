@@ -106,6 +106,10 @@ class GsmLoader(AbsLoader):
         
         # 時間変化量を追加する
         #gsm_df = util.add_time_variation(gsm_df)
+        
+        # 指定した緯度,経度のデータを抽出する
+        #   静岡〜いわき (35,138.8)〜(36.6,140.7)
+        gsm_df = gsm.extract_latitude_and_longitude(gsm_df, latitudes=(35,37), longitudes=(138, 141))
 
         return gsm_df
     
