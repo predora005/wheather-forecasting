@@ -73,6 +73,7 @@ if __name__ == '__main__':
             surf_columns.insert(0, '日付')
             surf_columns.insert(1, '時')
             pall_columns =  [col for col in columns if 'Surf' not in col]
+            pall_columns.remove('index')
             first_row = False
         
         # 地表データ(surf)、指定気圧面データ(pall)を抽出する
@@ -86,7 +87,7 @@ if __name__ == '__main__':
         pall_csv = os.path.join(after_pall, pall_file)
         
         # CSVに出力する
-        surf_df.to_csv(surf_csv)
+        #surf_df.to_csv(surf_csv)
         pall_df.to_csv(pall_csv)
         
         # 日付を更新する
