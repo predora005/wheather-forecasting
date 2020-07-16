@@ -64,7 +64,7 @@ def get_msm_initial_hours():
 # GSMの初期時刻を取得する
 ##################################################
 def get_gsm_initial_hours():
-    return [12, 18, 0, 6]
+    return [18, 0, 6, 12]
 
 ##################################################
 # MSMの指定気圧面を取得する
@@ -180,6 +180,10 @@ def download_gsm_files(output_dir, start_year, start_month, start_day, days):
     # 取得を開始する年月日を設定
     start_date = datetime.date(start_year, start_month, start_day)
     
+    # 日本時間の最初の方(0時〜9時)は、UTCだと前日になるため
+    # 日付を前日に変更してから処理を開始する
+    start_date = start_date - datetime.timedelta(days=1)
+    
     # 初期時刻(UTC)
     initial_hours = get_gsm_initial_hours()
     
@@ -231,11 +235,6 @@ def download_gsm_files(output_dir, start_year, start_month, start_day, days):
 ##################################################
 def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
     
-    # 年月日を取得
-    year = start_date.year
-    month = start_date.month
-    day = start_date.day
-    
     # 出力ファイル名
     output_filename = 'GSM_pall_{0:04d}_{1:02d}_{2:02d}.csv'.format(
         start_date.year, start_date.month, start_date.day)
@@ -245,6 +244,10 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
     if os.path.isfile(output_filepath):
         return
     
+    # 日本時間の最初の方(0時〜9時)は、UTCだと前日になるため
+    # 日付を前日に変更してから処理を開始する
+    date = start_date - datetime.timedelta(days=1)
+
     # 格納用のDataFrameを用意する
     hh_df = None
     
@@ -259,11 +262,16 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
         
         # 日を跨いだらdayを1加算する
         if hh == 0:
-            date = start_date + datetime.timedelta(days=1)
-            year = date.year
-            month = date.month
-            day = date.day
-            
+            date = date + datetime.timedelta(days=1)
+            #year = date.year
+            #month = date.month
+            #day = date.day
+        
+        # 年月日を取得
+        year = date.year
+        month = date.month
+        day = date.day
+    
         # DEBUG
         print("==================================================")
         print('{0:04d}/{1:02d}/{2:02d} {3:02d}:00 PALL'.format(year, month, day, hh))
@@ -273,9 +281,7 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
         filepath = os.path.join(input_dir, filename)
         
         # GRIB2ファイルを読み込む
-        #stop_watch.start()
         grbs = pygrib.open(filepath)
-        #stop_watch.stop().print_elapsed_sec('pygrib.open')
 
         # 列名リストとndarrayを準備する
         column_names = []
@@ -309,78 +315,58 @@ def gsm_pall_grib2_to_csv(input_dir, output_dir, start_date):
                 #print('Level:{0:d}, Parameter name: {1:s}'.format(level, grb.parameterName))
                 
                 # 指定した(緯度,経度)に含まれる格子点のデータを抽出する
-                #stop_watch.start()
                 lat_min, lat_max, lon_min, lon_max = get_gsm_latlons()
                 data, latitudes, longitudes = grb.data(lat1=lat_min, lat2=lat_max, lon1=lon_min, lon2=lon_max)
                 #print(data.shape, latitudes.min(), latitudes.max(), longitudes.min(), longitudes.max())
-                #stop_watch.stop().print_elapsed_sec('grb.data')
-                
+
                 # 物理量, 緯度, 経度を一次元化する
-                #stop_watch.start()
                 values = data.reshape(-1,)
                 latitudes = latitudes.reshape(-1,)
                 longitudes = longitudes.reshape(-1,)
-                #stop_watch.stop().print_elapsed_sec('data.reshape(-1,)')
-                
+
                 # 列名を作成し、リストに追加する
-                #stop_watch.start()
                 for i in range(latitudes.shape[0]):
                     column_name = '{0:d}hPa_lat{1:.2f}_long{2:.3f}_{3:s}'.format(
                         level, latitudes[i], longitudes[i], param_name)
                     column_names.append(column_name)
-                #stop_watch.stop().print_elapsed_sec('column_names.append')
-                
+
                 # 物理量をndrrayに追加する
-                #stop_watch.start()
                 values_array = np.append(values_array, values)
-                #stop_watch.stop().print_elapsed_sec('np.append')
-                
+
         # GRIBファイルを閉じる
         grbs.close()
         
         # 物理量と列名からDataFrameを作成する
-        #stop_watch.start()
         values_array = values_array.reshape(1,values_array.shape[0])
         df = pd.DataFrame(data=values_array, columns=column_names)
-        #stop_watch.stop().print_elapsed_sec('pd.DataFrame')
         
         # 時刻データを追加する(UTCから日本時間に変更する)
-        hh = hh - 9
-        if hh < 0: hh = hh + 24
+        hh = hh + 9
+        if hh >= 24: hh = hh - 24
         df['時'] = hh
         
         # 1時刻のDataFrameを、1日分のDataFrameに追加する
-        #stop_watch.start()
         if hh_df is None:
             hh_df = df
         else:
             hh_df = hh_df.append(df, ignore_index=True)
-        #stop_watch.stop().print_elapsed_sec('hh_df.append')
-        
+            
         stop_watch.stop().print_elapsed_sec('proc time')
         
     # 日付のデータを追加する
     hh_df['日付'] = start_date
     
     # 1日分のデータをCSVファイルに出力する
-    #stop_watch.start()
     hh_df = move_datetime_column_to_top(hh_df)
     hh_df.to_csv(output_filepath)
-    #stop_watch.stop().print_elapsed_sec('hh_df.to_csv')
-    
+
     print(output_filepath)
-    #print(hh_df.info())
-    
+
 ##################################################
 # GSMの地表データをGRIB2からCSVに変換する
 ##################################################
 def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
     
-    # 年月日を取得
-    year = start_date.year
-    month = start_date.month
-    day = start_date.day
-        
     # 出力ファイル名
     output_filename = 'GSM_surf_{0:04d}_{1:02d}_{2:02d}.csv'.format(
         start_date.year, start_date.month, start_date.day)
@@ -390,6 +376,10 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
     if os.path.isfile(output_filepath):
         return
     
+    # 日本時間の最初の方(0時〜9時)は、UTCだと前日になるため
+    # 日付を前日に変更してから処理を開始する
+    date = start_date - datetime.timedelta(days=1)
+
     # 格納用のDataFrameを用意する
     hh_df = None
     
@@ -404,10 +394,15 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
         
         # 日を跨いだらdayを1加算する
         if hh == 0:
-            date = start_date + datetime.timedelta(days=1)
-            year = date.year
-            month = date.month
-            day = date.day
+            date = date + date.timedelta(days=1)
+            #year = date.year
+            #month = date.month
+            #day = date.day
+        
+        # 年月日を取得
+        year = date.year
+        month = date.month
+        day = date.day
         
         # DEBUG
         print("==================================================")
@@ -418,10 +413,8 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
         filepath = os.path.join(input_dir, filename)
         
         # GRIB2ファイルを読み込む
-        #stop_watch.start()
         grbs = pygrib.open(filepath)
-        #stop_watch.stop().print_elapsed_sec('pygrib.open')
-        
+
         # 列名リストとndarrayを準備する
         column_names = []
         values_array = np.empty(0)
@@ -446,9 +439,7 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
                     total_precipitation_time_range = grb.lengthOfTimeRange
                 else:
                     continue
-                #if grb.lengthOfTimeRange != 6:
-                #    continue
-                
+
             # DEBUG
             #print("==============================")
             #print('Parameter name: {0:s}'.format(grb.parameterName))
@@ -459,18 +450,14 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
                 continue
             
             # 指定した(緯度,経度)に含まれる格子点のデータを抽出する
-            #stop_watch.start()
             lat_min, lat_max, lon_min, lon_max = get_gsm_latlons()
             data, latitudes, longitudes = grb.data(lat1=lat_min, lat2=lat_max, lon1=lon_min, lon2=lon_max)
-            #stop_watch.stop().print_elapsed_sec('grb.data')
             
             # 物理量, 緯度, 経度を一次元化する
-            #stop_watch.start()
             values = data.reshape(-1,)
             latitudes = latitudes.reshape(-1,)
             longitudes = longitudes.reshape(-1,)
-            #stop_watch.stop().print_elapsed_sec('data.reshpae(-1,)')
-            
+
             # 列名を作成し、リストに追加する
             for i in range(latitudes.shape[0]):
                 column_name = 'Surf_lat{0:.2f}_long{1:.3f}_{2:s}'.format(
@@ -478,46 +465,37 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
                 column_names.append(column_name)
             
             # 物理量をndrrayに追加する
-            #stop_watch.start()
             values_array = np.append(values_array, values)
-            #stop_watch.stop().print_elapsed_sec('np.append')
-        
+
         # GRIBファイルを閉じる
         grbs.close()
                 
         # 物理量と列名からDataFrameを作成する
-        #stop_watch.start()
         values_array = values_array.reshape(1,values_array.shape[0])
         df = pd.DataFrame(data=values_array, columns=column_names)
-        #stop_watch.stop().print_elapsed_sec('pd.DataFrame')
-        
+
         # 時刻データを追加する(UTCから日本時間に変更する)
-        hh = hh - 9
-        if hh < 0: hh = hh + 24
+        hh = hh + 9
+        if hh >= 24: hh = hh - 24
         df['時'] = hh
         
         # 1時刻のDataFrameを、1日分のDataFrameに追加する
-        #stop_watch.start()
         if hh_df is None:
             hh_df = df
         else:
             hh_df = hh_df.append(df, ignore_index=True)
-        #stop_watch.stop().print_elapsed_sec('hh_df.append')
-        
+
         stop_watch.stop().print_elapsed_sec('proc time')
         
     # 日付のデータを追加する
     hh_df['日付'] = start_date
     
     # 1日分のデータをCSVファイルに出力する
-    #stop_watch.start()
     hh_df = move_datetime_column_to_top(hh_df)
     hh_df.to_csv(output_filepath)
-    #stop_watch.stop().print_elapsed_sec('hh_df.to_csv')
-        
+
     print(output_filepath)
-    #print(hh_df.info())
-    
+
 ##################################################
 # GSMの指定気圧面・地表データをGRIB2からCSVに変換する
 ##################################################
@@ -585,7 +563,7 @@ if __name__ == '__main__':
     input_dir = os.path.join(cwd, 'input3')
     
     # 取得開始日付、取得する日数を設定する
-    year = 2017
+    year = 2016
     month = 1
     day = 1
     days = 1
@@ -595,7 +573,7 @@ if __name__ == '__main__':
     
     # CSVファイルの出力先ディレクトリ
     cwd = os.getcwd()
-    output_dir = os.path.join(cwd, 'input5')
+    output_dir = os.path.join(cwd, 'input6')
     
     # GSMのデータをGRIB2からCSVに変換する
     gsm_grib2_to_csv(input_dir, output_dir, year, month, day, days)
