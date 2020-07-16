@@ -230,9 +230,48 @@ class GsmForecastRunner(AbsRunner):
         
         # 訓練データとテストデータに分割する
         #train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=True)
-        train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=False, test_size=0.25)
+        #train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, shuffle=False, test_size=0.25)
+        train_x, test_x, train_y, test_y = self._train_test_split(data_x, data_y, 4, [3])
         
         return train_x, train_y, test_x, test_y
+    
+    ##################################################
+    # 学習データ作成
+    ##################################################
+    def _train_test_split(self, data_x, data_y, split_num, test_no):
+        
+        train_x = None
+        test_x = None
+        train_y = None
+        test_y = None
+        
+        # 指定した分割数で分割する
+        one_block_num = float(len(data_x) / split_num)
+        for no in range(split_num):
+            
+            start_i = round( float(no) * one_block_num)
+            end_i = round( float(no + 1) * one_block_num)
+            
+            # 分割
+            split_x = data_x.iloc[start_i:end_i,]
+            split_y = data_y.iloc[start_i:end_i,]
+            
+            if no in test_no:
+                # テスト用データ
+                if test_x is None:
+                    test_x, test_y = split_x, split_y
+                else:
+                    test_x = test_x.append(split_x)
+                    test_y = test_y.append(split_y)
+            else:
+                # 学習用データ
+                if train_x is None:
+                    train_x, train_y = split_x, split_y
+                else:
+                    train_x = train_x.append(split_x)
+                    train_y = train_y.append(split_y)
+        
+        return train_x, test_x, train_y, test_y
     
     ##################################################
     # 特徴量の重要度を表示する
