@@ -394,7 +394,7 @@ def gsm_surf_grib2_to_csv(input_dir, output_dir, start_date):
         
         # 日を跨いだらdayを1加算する
         if hh == 0:
-            date = date + date.timedelta(days=1)
+            date = date + datetime.timedelta(days=1)
             #year = date.year
             #month = date.month
             #day = date.day
