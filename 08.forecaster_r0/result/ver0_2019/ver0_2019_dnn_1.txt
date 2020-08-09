@@ -1,0 +1,336 @@
+##################################################
+    2019年の天気予測モデル。
+    入力は、9地点(水戸,前橋,東京,静岡,大阪,秩父,河口湖,新潟,宇都宮)の気象データ。
+    出力は、水戸の天気(晴れ,曇り,雨に分類)
+    - モデル：DNN
+    - 入力：9地点の現在時刻の気温,降水量,湿度,気圧
+    - 出力：6時間後の水戸の天気
+    - 正解率： 62.5% (0.619, 0.628, 0.651, 0.602)
+##################################################
+Using TensorFlow backend.
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:516: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint8 = np.dtype([("qint8", np.int8, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:517: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_quint8 = np.dtype([("quint8", np.uint8, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:518: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint16 = np.dtype([("qint16", np.int16, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:519: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_quint16 = np.dtype([("quint16", np.uint16, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:520: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint32 = np.dtype([("qint32", np.int32, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:525: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  np_resource = np.dtype([("resource", np.ubyte, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:541: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint8 = np.dtype([("qint8", np.int8, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:542: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_quint8 = np.dtype([("quint8", np.uint8, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:543: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint16 = np.dtype([("qint16", np.int16, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:544: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_quint16 = np.dtype([("quint16", np.uint16, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:545: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint32 = np.dtype([("qint32", np.int32, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:550: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  np_resource = np.dtype([("resource", np.ubyte, 1)])
+/home/ec2-user/weather-forecasting/08.forcaster_r0/runner/runner_2019.py:60: DtypeWarning: Columns (3,4,6,7,8,9,10,12,17,18,19,20,22,23,24,25,28,29,33,34,35,36,38,39,40,41,42,44,45,55,56,57,58,60,61,67,68,70,71,72,73,74,76,82,83,84,86,87,88,89,90,92,93,97,98,99,100,102,103,104,105,106,108,109,116,118,119,120,121,122,125,129,130,131,132,134,135,136,137,138,140,141) have mixed types.Specify dtype option on import or set low_memory=False.
+  self._load_data()
+<class 'pandas.core.frame.DataFrame'>
+Int64Index: 5844 entries, 2 to 35060
+Data columns (total 39 columns):
+ #   Column                Non-Null Count  Dtype         
+---  ------                --------------  -----         
+ 0   日付                    5844 non-null   datetime64[ns]
+ 1   時                     5844 non-null   int64         
+ 2   Mito_海面気圧(hPa)        5844 non-null   float32       
+ 3   Mito_降水量(mm)          1101 non-null   float32       
+ 4   Mito_気温(℃)            5844 non-null   float32       
+ 5   Mito_湿度(％)            5844 non-null   float32       
+ 6   Mito_天気               5844 non-null   int64         
+ 7   Maebashi_海面気圧(hPa)    5844 non-null   float32       
+ 8   Maebashi_降水量(mm)      1083 non-null   float32       
+ 9   Maebashi_気温(℃)        5844 non-null   float32       
+ 10  Maebashi_湿度(％)        5839 non-null   float32       
+ 11  Tokyo_海面気圧(hPa)       5844 non-null   float32       
+ 12  Tokyo_降水量(mm)         1139 non-null   float32       
+ 13  Tokyo_気温(℃)           5844 non-null   float32       
+ 14  Tokyo_湿度(％)           5839 non-null   float32       
+ 15  Shizuoka_海面気圧(hPa)    5844 non-null   float32       
+ 16  Shizuoka_降水量(mm)      1142 non-null   float32       
+ 17  Shizuoka_気温(℃)        5844 non-null   float32       
+ 18  Shizuoka_湿度(％)        5840 non-null   float32       
+ 19  Chichibu_海面気圧(hPa)    5843 non-null   float32       
+ 20  Chichibu_降水量(mm)      1033 non-null   float32       
+ 21  Chichibu_気温(℃)        5843 non-null   float32       
+ 22  Chichibu_湿度(％)        5842 non-null   float32       
+ 23  Koufu_海面気圧(hPa)       5844 non-null   float32       
+ 24  Koufu_降水量(mm)         984 non-null    float32       
+ 25  Koufu_気温(℃)           5844 non-null   float32       
+ 26  Koufu_湿度(％)           5842 non-null   float32       
+ 27  Niigata_海面気圧(hPa)     5844 non-null   float32       
+ 28  Niigata_降水量(mm)       1978 non-null   float32       
+ 29  Niigata_気温(℃)         5844 non-null   float32       
+ 30  Niigata_湿度(％)         5841 non-null   float32       
+ 31  Utsunomiya_海面気圧(hPa)  5844 non-null   float32       
+ 32  Utsunomiya_降水量(mm)    1130 non-null   float32       
+ 33  Utsunomiya_気温(℃)      5844 non-null   float32       
+ 34  Utsunomiya_湿度(％)      5844 non-null   float32       
+ 35  Ohsaka_海面気圧(hPa)      5844 non-null   float32       
+ 36  Ohsaka_降水量(mm)        994 non-null    float32       
+ 37  Ohsaka_気温(℃)          5844 non-null   float32       
+ 38  Ohsaka_湿度(％)          5844 non-null   float32       
+dtypes: datetime64[ns](1), float32(36), int64(2)
+memory usage: 1004.4 KB
+None
+Model: "sequential_1"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_1 (Dense)              (None, 32)                1184      
+_________________________________________________________________
+leaky_re_lu_1 (LeakyReLU)    (None, 32)                0         
+_________________________________________________________________
+dropout_1 (Dropout)          (None, 32)                0         
+_________________________________________________________________
+dense_2 (Dense)              (None, 32)                1056      
+_________________________________________________________________
+leaky_re_lu_2 (LeakyReLU)    (None, 32)                0         
+_________________________________________________________________
+dropout_2 (Dropout)          (None, 32)                0         
+_________________________________________________________________
+dense_3 (Dense)              (None, 3)                 99        
+_________________________________________________________________
+activation_1 (Activation)    (None, 3)                 0         
+=================================================================
+Total params: 2,339
+Trainable params: 2,339
+Non-trainable params: 0
+_________________________________________________________________
+2020-08-09 15:36:58.343343: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 AVX512F FMA
+2020-08-09 15:36:58.346997: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2500000000 Hz
+2020-08-09 15:36:58.347235: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x9be8c0 executing computations on platform Host. Devices:
+2020-08-09 15:36:58.347257: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): <undefined>, <undefined>
+2020-08-09 15:36:58.387513: W tensorflow/compiler/jit/mark_for_compilation_pass.cc:1412] (One-time warning): Not using XLA:CPU for cluster because envvar TF_XLA_FLAGS=--tf_xla_cpu_global_jit was not set.  If you want XLA:CPU, either set that envvar, or use experimental_jit_scope to enable XLA:CPU.  To confirm that XLA is active, pass --vmodule=xla_compilation_cache=1 (as a proper command-line flag, not via TF_XLA_FLAGS) or set the envvar XLA_FLAGS=--xla_hlo_profile.
+WARNING:tensorflow:From /home/ec2-user/.local/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py:422: The name tf.global_variables is deprecated. Please use tf.compat.v1.global_variables instead.
+
+0000050 : loss=0.824478, acc=0.604975 val_loss=0.836618, val_acc=0.593429
+0000100 : loss=0.793839, acc=0.616842 val_loss=0.815923, val_acc=0.596851
+0000150 : loss=0.779522, acc=0.624829 val_loss=0.799918, val_acc=0.598905
+0000200 : loss=0.773641, acc=0.628708 val_loss=0.787154, val_acc=0.614648
+0000250 : loss=0.764355, acc=0.633729 val_loss=0.787755, val_acc=0.600274
+0000300 : loss=0.762228, acc=0.632131 val_loss=0.793171, val_acc=0.586585
+0000350 : loss=0.758240, acc=0.635326 val_loss=0.783853, val_acc=0.611225
+0000400 : loss=0.755579, acc=0.641032 val_loss=0.780121, val_acc=0.616701
+0000450 : loss=0.759908, acc=0.632816 val_loss=0.797952, val_acc=0.595483
+0000500 : loss=0.753067, acc=0.639662 val_loss=0.788222, val_acc=0.592745
+0000550 : loss=0.749396, acc=0.640347 val_loss=0.778213, val_acc=0.607803
+0000600 : loss=0.749262, acc=0.644226 val_loss=0.779466, val_acc=0.613279
+0000650 : loss=0.762829, acc=0.628937 val_loss=0.810611, val_acc=0.583847
+0000700 : loss=0.752233, acc=0.635098 val_loss=0.793583, val_acc=0.601643
+0000750 : loss=0.746781, acc=0.639890 val_loss=0.778144, val_acc=0.614648
+0000800 : loss=0.746854, acc=0.644911 val_loss=0.775916, val_acc=0.620808
+0000850 : loss=0.753975, acc=0.639434 val_loss=0.777283, val_acc=0.631075
+Epoch 00041: early stopping
+0000900 : loss=0.745605, acc=0.644683 val_loss=0.777694, val_acc=0.618754
+#################################
+  dnn_fold_00
+#################################
+Accuracy:0.619
+  ## Sunny
+    Accuracy(Sunny-Sunny):0.731  449/614
+    Failure (Sunny-Cloud):0.265  163/614
+    Failure (Sunny-Rain):0.003  2/614
+  ## Cloud
+    Failure (Cloud-Sunny):0.342  222/649
+    Accuracy(Cloud-Cloud):0.615  399/649
+    Failure (Cloud-Rain):0.043  28/649
+  ## Rain
+    Failure (Rain-Sunny):0.091  18/198
+    Failure (Rain-Cloud):0.626  124/198
+    Accuracy(Rain-Rain):0.283  56/198
+Precision:
+  ## Sunny: 0.652  449/689
+  ## Cloud: 0.582  399/686
+  ## Rain: 0.651  56/86
+Recall:
+  ## Sunny: 0.731  449/614
+  ## Cloud: 0.615  399/649
+  ## Rain: 0.283  56/198
+Model: "sequential_2"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_4 (Dense)              (None, 32)                1184      
+_________________________________________________________________
+leaky_re_lu_3 (LeakyReLU)    (None, 32)                0         
+_________________________________________________________________
+dropout_3 (Dropout)          (None, 32)                0         
+_________________________________________________________________
+dense_5 (Dense)              (None, 32)                1056      
+_________________________________________________________________
+leaky_re_lu_4 (LeakyReLU)    (None, 32)                0         
+_________________________________________________________________
+dropout_4 (Dropout)          (None, 32)                0         
+_________________________________________________________________
+dense_6 (Dense)              (None, 3)                 99        
+_________________________________________________________________
+activation_2 (Activation)    (None, 3)                 0         
+=================================================================
+Total params: 2,339
+Trainable params: 2,339
+Non-trainable params: 0
+_________________________________________________________________
+0000050 : loss=0.821159, acc=0.600183 val_loss=0.802319, val_acc=0.609172
+0000100 : loss=0.789275, acc=0.619124 val_loss=0.776468, val_acc=0.621492
+0000150 : loss=0.777367, acc=0.630306 val_loss=0.762700, val_acc=0.630390
+0000200 : loss=0.770161, acc=0.638521 val_loss=0.761664, val_acc=0.628337
+0000250 : loss=0.772310, acc=0.633501 val_loss=0.765129, val_acc=0.621492
+Epoch 00042: early stopping
+0000300 : loss=0.764288, acc=0.638065 val_loss=0.753888, val_acc=0.628337
+#################################
+  dnn_fold_01
+#################################
+Accuracy:0.628
+  ## Sunny
+    Accuracy(Sunny-Sunny):0.730  509/697
+    Failure (Sunny-Cloud):0.268  187/697
+    Failure (Sunny-Rain):0.001  1/697
+  ## Cloud
+    Failure (Cloud-Sunny):0.335  188/562
+    Accuracy(Cloud-Cloud):0.614  345/562
+    Failure (Cloud-Rain):0.052  29/562
+  ## Rain
+    Failure (Rain-Sunny):0.094  19/202
+    Failure (Rain-Cloud):0.589  119/202
+    Accuracy(Rain-Rain):0.317  64/202
+Precision:
+  ## Sunny: 0.711  509/716
+  ## Cloud: 0.530  345/651
+  ## Rain: 0.681  64/94
+Recall:
+  ## Sunny: 0.730  509/697
+  ## Cloud: 0.614  345/562
+  ## Rain: 0.317  64/202
+Model: "sequential_3"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_7 (Dense)              (None, 32)                1184      
+_________________________________________________________________
+leaky_re_lu_5 (LeakyReLU)    (None, 32)                0         
+_________________________________________________________________
+dropout_5 (Dropout)          (None, 32)                0         
+_________________________________________________________________
+dense_8 (Dense)              (None, 32)                1056      
+_________________________________________________________________
+leaky_re_lu_6 (LeakyReLU)    (None, 32)                0         
+_________________________________________________________________
+dropout_6 (Dropout)          (None, 32)                0         
+_________________________________________________________________
+dense_9 (Dense)              (None, 3)                 99        
+_________________________________________________________________
+activation_3 (Activation)    (None, 3)                 0         
+=================================================================
+Total params: 2,339
+Trainable params: 2,339
+Non-trainable params: 0
+_________________________________________________________________
+0000050 : loss=0.797555, acc=0.609539 val_loss=0.815551, val_acc=0.618070
+0000100 : loss=0.772531, acc=0.623916 val_loss=0.796459, val_acc=0.641342
+0000150 : loss=0.766304, acc=0.622775 val_loss=0.791057, val_acc=0.644079
+0000200 : loss=0.758078, acc=0.631903 val_loss=0.783303, val_acc=0.637235
+0000250 : loss=0.755456, acc=0.634642 val_loss=0.785102, val_acc=0.631075
+0000300 : loss=0.750107, acc=0.636696 val_loss=0.782278, val_acc=0.632444
+0000350 : loss=0.753440, acc=0.634185 val_loss=0.779484, val_acc=0.644079
+0000400 : loss=0.748354, acc=0.639890 val_loss=0.784051, val_acc=0.635866
+0000450 : loss=0.749729, acc=0.637380 val_loss=0.780563, val_acc=0.631759
+Epoch 00049: early stopping
+0000500 : loss=0.748134, acc=0.633729 val_loss=0.774877, val_acc=0.650924
+#################################
+  dnn_fold_02
+#################################
+Accuracy:0.651
+  ## Sunny
+    Accuracy(Sunny-Sunny):0.771  522/677
+    Failure (Sunny-Cloud):0.226  153/677
+    Failure (Sunny-Rain):0.003  2/677
+  ## Cloud
+    Failure (Cloud-Sunny):0.334  201/601
+    Accuracy(Cloud-Cloud):0.616  370/601
+    Failure (Cloud-Rain):0.050  30/601
+  ## Rain
+    Failure (Rain-Sunny):0.158  29/183
+    Failure (Rain-Cloud):0.519  95/183
+    Accuracy(Rain-Rain):0.322  59/183
+Precision:
+  ## Sunny: 0.694  522/752
+  ## Cloud: 0.599  370/618
+  ## Rain: 0.648  59/91
+Recall:
+  ## Sunny: 0.771  522/677
+  ## Cloud: 0.616  370/601
+  ## Rain: 0.322  59/183
+Model: "sequential_4"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_10 (Dense)             (None, 32)                1184      
+_________________________________________________________________
+leaky_re_lu_7 (LeakyReLU)    (None, 32)                0         
+_________________________________________________________________
+dropout_7 (Dropout)          (None, 32)                0         
+_________________________________________________________________
+dense_11 (Dense)             (None, 32)                1056      
+_________________________________________________________________
+leaky_re_lu_8 (LeakyReLU)    (None, 32)                0         
+_________________________________________________________________
+dropout_8 (Dropout)          (None, 32)                0         
+_________________________________________________________________
+dense_12 (Dense)             (None, 3)                 99        
+_________________________________________________________________
+activation_4 (Activation)    (None, 3)                 0         
+=================================================================
+Total params: 2,339
+Trainable params: 2,339
+Non-trainable params: 0
+_________________________________________________________________
+0000050 : loss=0.812522, acc=0.606434 val_loss=0.855164, val_acc=0.571918
+0000100 : loss=0.778108, acc=0.626968 val_loss=0.828961, val_acc=0.586986
+0000150 : loss=0.770823, acc=0.624686 val_loss=0.812684, val_acc=0.599315
+0000200 : loss=0.760297, acc=0.630618 val_loss=0.815920, val_acc=0.593836
+0000250 : loss=0.749687, acc=0.637691 val_loss=0.818435, val_acc=0.595205
+0000300 : loss=0.743712, acc=0.645676 val_loss=0.816228, val_acc=0.600685
+0000350 : loss=0.745195, acc=0.633584 val_loss=0.807178, val_acc=0.604110
+0000400 : loss=0.742565, acc=0.638832 val_loss=0.813952, val_acc=0.604110
+0000450 : loss=0.738053, acc=0.643395 val_loss=0.814659, val_acc=0.602740
+0000500 : loss=0.735460, acc=0.643395 val_loss=0.812989, val_acc=0.604110
+Epoch 00049: early stopping
+0000550 : loss=0.737338, acc=0.647045 val_loss=0.825683, val_acc=0.602055
+#################################
+  dnn_fold_03
+#################################
+Accuracy:0.602
+  ## Sunny
+    Accuracy(Sunny-Sunny):0.602  441/733
+    Failure (Sunny-Cloud):0.383  281/733
+    Failure (Sunny-Rain):0.015  11/733
+  ## Cloud
+    Failure (Cloud-Sunny):0.224  114/509
+    Accuracy(Cloud-Cloud):0.725  369/509
+    Failure (Cloud-Rain):0.051  26/509
+  ## Rain
+    Failure (Rain-Sunny):0.050  11/218
+    Failure (Rain-Cloud):0.633  138/218
+    Accuracy(Rain-Rain):0.317  69/218
+Precision:
+  ## Sunny: 0.779  441/566
+  ## Cloud: 0.468  369/788
+  ## Rain: 0.651  69/106
+Recall:
+  ## Sunny: 0.602  441/733
+  ## Cloud: 0.725  369/509
+  ## Rain: 0.317  69/218
+
+
+Process exited with code: 0
+
+Pane is dead

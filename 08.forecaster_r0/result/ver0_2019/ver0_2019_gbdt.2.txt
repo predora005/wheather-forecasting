@@ -1,0 +1,220 @@
+##################################################
+    2019年の天気予測モデル。
+    入力は、9地点(水戸,前橋,東京,静岡,大阪,秩父,河口湖,新潟,宇都宮)の気象データ。
+    出力は、水戸の天気(晴れ,曇り,雨に分類)
+    - モデル：GBDT
+    - 入力：9地点の現在時刻の気温,降水量,湿度,気圧
+    - 出力：6時間後の水戸の天気
+    - 正解率： 58.9% (0.578, 0.607, 0.590, 0.580)
+##################################################
+Using TensorFlow backend.
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:516: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint8 = np.dtype([("qint8", np.int8, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:517: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_quint8 = np.dtype([("quint8", np.uint8, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:518: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint16 = np.dtype([("qint16", np.int16, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:519: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_quint16 = np.dtype([("quint16", np.uint16, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:520: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint32 = np.dtype([("qint32", np.int32, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:525: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  np_resource = np.dtype([("resource", np.ubyte, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:541: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint8 = np.dtype([("qint8", np.int8, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:542: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_quint8 = np.dtype([("quint8", np.uint8, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:543: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint16 = np.dtype([("qint16", np.int16, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:544: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_quint16 = np.dtype([("quint16", np.uint16, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:545: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  _np_qint32 = np.dtype([("qint32", np.int32, 1)])
+/home/ec2-user/.local/lib/python3.7/site-packages/tensorboard/compat/tensorflow_stub/dtypes.py:550: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
+  np_resource = np.dtype([("resource", np.ubyte, 1)])
+/home/ec2-user/weather-forecasting/08.forcaster_r0/runner/runner_2019.py:60: DtypeWarning: Columns (3,4,6,7,8,9,10,12,17,18,19,20,22,23,24,25,28,29,33,34,35,36,38,39,40,41,42,44,45,55,56,57,58,60,61,67,68,70,71,72,73,74,76,82,83,84,86,87,88,89,90,92,93,97,98,99,100,102,103,104,105,106,108,109,116,118,119,120,121,122,125,129,130,131,132,134,135,136,137,138,140,141) have mixed types.Specify dtype option on import or set low_memory=False.
+  self._load_data()
+<class 'pandas.core.frame.DataFrame'>
+Int64Index: 5844 entries, 2 to 35060
+Data columns (total 39 columns):
+ #   Column                Non-Null Count  Dtype         
+---  ------                --------------  -----         
+ 0   日付                    5844 non-null   datetime64[ns]
+ 1   時                     5844 non-null   int64         
+ 2   Mito_海面気圧(hPa)        5844 non-null   float32       
+ 3   Mito_降水量(mm)          1101 non-null   float32       
+ 4   Mito_気温(℃)            5844 non-null   float32       
+ 5   Mito_湿度(％)            5844 non-null   float32       
+ 6   Mito_天気               5844 non-null   int64         
+ 7   Maebashi_海面気圧(hPa)    5844 non-null   float32       
+ 8   Maebashi_降水量(mm)      1083 non-null   float32       
+ 9   Maebashi_気温(℃)        5844 non-null   float32       
+ 10  Maebashi_湿度(％)        5839 non-null   float32       
+ 11  Tokyo_海面気圧(hPa)       5844 non-null   float32       
+ 12  Tokyo_降水量(mm)         1139 non-null   float32       
+ 13  Tokyo_気温(℃)           5844 non-null   float32       
+ 14  Tokyo_湿度(％)           5839 non-null   float32       
+ 15  Shizuoka_海面気圧(hPa)    5844 non-null   float32       
+ 16  Shizuoka_降水量(mm)      1142 non-null   float32       
+ 17  Shizuoka_気温(℃)        5844 non-null   float32       
+ 18  Shizuoka_湿度(％)        5840 non-null   float32       
+ 19  Chichibu_海面気圧(hPa)    5843 non-null   float32       
+ 20  Chichibu_降水量(mm)      1033 non-null   float32       
+ 21  Chichibu_気温(℃)        5843 non-null   float32       
+ 22  Chichibu_湿度(％)        5842 non-null   float32       
+ 23  Koufu_海面気圧(hPa)       5844 non-null   float32       
+ 24  Koufu_降水量(mm)         984 non-null    float32       
+ 25  Koufu_気温(℃)           5844 non-null   float32       
+ 26  Koufu_湿度(％)           5842 non-null   float32       
+ 27  Niigata_海面気圧(hPa)     5844 non-null   float32       
+ 28  Niigata_降水量(mm)       1978 non-null   float32       
+ 29  Niigata_気温(℃)         5844 non-null   float32       
+ 30  Niigata_湿度(％)         5841 non-null   float32       
+ 31  Utsunomiya_海面気圧(hPa)  5844 non-null   float32       
+ 32  Utsunomiya_降水量(mm)    1130 non-null   float32       
+ 33  Utsunomiya_気温(℃)      5844 non-null   float32       
+ 34  Utsunomiya_湿度(％)      5844 non-null   float32       
+ 35  Ohsaka_海面気圧(hPa)      5844 non-null   float32       
+ 36  Ohsaka_降水量(mm)        994 non-null    float32       
+ 37  Ohsaka_気温(℃)          5844 non-null   float32       
+ 38  Ohsaka_湿度(％)          5844 non-null   float32       
+dtypes: datetime64[ns](1), float32(36), int64(2)
+memory usage: 1004.4 KB
+None
+[0]     train-merror:0.37046    eval-merror:0.46338
+Multiple eval metrics have been passed: 'eval-merror' will be used for early stopping.
+
+Will train until eval-merror hasn't improved in 40 rounds.
+[50]    train-merror:0.25200    eval-merror:0.42026
+Stopping. Best iteration:
+[58]    train-merror:0.23785    eval-merror:0.41547
+
+Best Score:0.4155, Iteratin:58, Ntree_Limit:59
+#################################
+  xgboost_fold_00
+#################################
+Accuracy:0.578
+  ## Sunny
+    Accuracy(Sunny-Sunny):0.671  412/614
+    Failure (Sunny-Cloud):0.311  191/614
+    Failure (Sunny-Rain):0.018  11/614
+  ## Cloud
+    Failure (Cloud-Sunny):0.331  215/649
+    Accuracy(Cloud-Cloud):0.598  388/649
+    Failure (Cloud-Rain):0.071  46/649
+  ## Rain
+    Failure (Rain-Sunny):0.126  25/198
+    Failure (Rain-Cloud):0.652  129/198
+    Accuracy(Rain-Rain):0.222  44/198
+Precision:
+  ## Sunny: 0.632  412/652
+  ## Cloud: 0.548  388/708
+  ## Rain: 0.436  44/101
+Recall:
+  ## Sunny: 0.671  412/614
+  ## Cloud: 0.598  388/649
+  ## Rain: 0.222  44/198
+[0]     train-merror:0.38370    eval-merror:0.40383
+Multiple eval metrics have been passed: 'eval-merror' will be used for early stopping.
+
+Will train until eval-merror hasn't improved in 40 rounds.
+[50]    train-merror:0.25223    eval-merror:0.39014
+Stopping. Best iteration:
+[54]    train-merror:0.24675    eval-merror:0.38809
+
+Best Score:0.3881, Iteratin:54, Ntree_Limit:55
+#################################
+  xgboost_fold_01
+#################################
+Accuracy:0.607
+  ## Sunny
+    Accuracy(Sunny-Sunny):0.746  519/696
+    Failure (Sunny-Cloud):0.234  163/696
+    Failure (Sunny-Rain):0.020  14/696
+  ## Cloud
+    Failure (Cloud-Sunny):0.389  219/563
+    Accuracy(Cloud-Cloud):0.572  322/563
+    Failure (Cloud-Rain):0.039  22/563
+  ## Rain
+    Failure (Rain-Sunny):0.218  44/202
+    Failure (Rain-Cloud):0.554  112/202
+    Accuracy(Rain-Rain):0.228  46/202
+Precision:
+  ## Sunny: 0.664  519/782
+  ## Cloud: 0.539  322/597
+  ## Rain: 0.561  46/82
+Recall:
+  ## Sunny: 0.746  519/696
+  ## Cloud: 0.572  322/563
+  ## Rain: 0.228  46/202
+[0]     train-merror:0.38932    eval-merror:0.44041
+Multiple eval metrics have been passed: 'eval-merror' will be used for early stopping.
+
+Will train until eval-merror hasn't improved in 40 rounds.
+[50]    train-merror:0.25536    eval-merror:0.41027
+Stopping. Best iteration:
+[12]    train-merror:0.33250    eval-merror:0.40753
+
+Best Score:0.4075, Iteratin:12, Ntree_Limit:13
+#################################
+  xgboost_fold_02
+#################################
+Accuracy:0.590
+  ## Sunny
+    Accuracy(Sunny-Sunny):0.671  454/677
+    Failure (Sunny-Cloud):0.318  215/677
+    Failure (Sunny-Rain):0.012  8/677
+  ## Cloud
+    Failure (Cloud-Sunny):0.325  195/600
+    Accuracy(Cloud-Cloud):0.602  361/600
+    Failure (Cloud-Rain):0.073  44/600
+  ## Rain
+    Failure (Rain-Sunny):0.213  39/183
+    Failure (Rain-Cloud):0.536  98/183
+    Accuracy(Rain-Rain):0.251  46/183
+Precision:
+  ## Sunny: 0.660  454/688
+  ## Cloud: 0.536  361/674
+  ## Rain: 0.469  46/98
+Recall:
+  ## Sunny: 0.671  454/677
+  ## Cloud: 0.602  361/600
+  ## Rain: 0.251  46/183
+[0]     train-merror:0.37220    eval-merror:0.49041
+Multiple eval metrics have been passed: 'eval-merror' will be used for early stopping.
+
+Will train until eval-merror hasn't improved in 40 rounds.
+[50]    train-merror:0.25810    eval-merror:0.43356
+[100]   train-merror:0.18736    eval-merror:0.42603
+[150]   train-merror:0.13921    eval-merror:0.42192
+Stopping. Best iteration:
+[138]   train-merror:0.14925    eval-merror:0.41575
+
+Best Score:0.4158, Iteratin:138, Ntree_Limit:139
+#################################
+  xgboost_fold_03
+#################################
+Accuracy:0.580
+  ## Sunny
+    Accuracy(Sunny-Sunny):0.662  485/733
+    Failure (Sunny-Cloud):0.327  240/733
+    Failure (Sunny-Rain):0.011  8/733
+  ## Cloud
+    Failure (Cloud-Sunny):0.320  163/509
+    Accuracy(Cloud-Cloud):0.621  316/509
+    Failure (Cloud-Rain):0.059  30/509
+  ## Rain
+    Failure (Rain-Sunny):0.142  31/218
+    Failure (Rain-Cloud):0.647  141/218
+    Accuracy(Rain-Rain):0.211  46/218
+Precision:
+  ## Sunny: 0.714  485/679
+  ## Cloud: 0.453  316/697
+  ## Rain: 0.548  46/84
+Recall:
+  ## Sunny: 0.662  485/733
+  ## Cloud: 0.621  316/509
+  ## Rain: 0.211  46/218
+
+
+Process exited with code: 0
