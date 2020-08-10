@@ -52,7 +52,7 @@ class Loader2019(AbsLoader):
     def _load_ground_weather(self, reload):
         
         # 保存ファイルの有無を確認する
-        ground_weather_csv = os.path.join(self._temp_dir, 'ground_weather_2019.csv')
+        ground_weather_csv = os.path.join(self._temp_dir, 'ground_weather.csv')
         exist_csv = os.path.isfile(ground_weather_csv)
         
         if (reload == False) and (exist_csv == True):

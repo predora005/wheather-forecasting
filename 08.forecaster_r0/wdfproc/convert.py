@@ -402,7 +402,7 @@ def convert_wind_to_vector_highrise(df, inplace=True):
     
     # 風向きを度数(°)からラジアンに変換する関数
     def to_radian(wind_deg):
-        radian = (-wind_deg + 90)/180 * math.pi
+        radian = (-wind_deg + 270)/180 * math.pi
         return radian
     
     wind_radian_cols = []

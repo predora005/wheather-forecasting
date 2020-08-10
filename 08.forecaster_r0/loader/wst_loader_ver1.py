@@ -9,24 +9,27 @@ import wdfproc
 import util
 
 ##################################################
-# 気象庁の気象観測データロードクラス
+# 気象庁の気象観測データロードクラス。
+# 2020 Ver1。
+# 改善前の初期状態。
 ##################################################
-class WeatherStationLoader(AbsLoader):
+class WeatherStationLoader2020Ver1(AbsLoader):
     """データロードクラス
         
     Attributes:
         _base_dir (string)      : ベースディレクトリ
         _temp_dirname (string)  : 一時ディレクトリ名
         _input_dirname (string) : 入力ディレクトリ名
+        _label_name (string)    : 正解データのラベル名
     """
     
     ##################################################
     # コンストラクタ
     ##################################################
-    def __init__(self, base_dir, temp_dirname, input_dirname):
+    def __init__(self, base_dir, temp_dirname, input_dirname, label_name):
         
         # 抽象クラスのコンストラクタ
-        super().__init__(base_dir, temp_dirname, input_dirname)
+        super().__init__(base_dir, temp_dirname, input_dirname, label_name)
         
     ##################################################
     # データをロードする
@@ -96,17 +99,12 @@ class WeatherStationLoader(AbsLoader):
         # 雲量を浮動小数点数に変換する
         ground_df = wdfproc.convert_cloud_volume_to_float(ground_df)
 
-        # 天気を指定した境界値で分類する
-        #  - 水戸は3分割、それ以外は○分割にする
-        label_name = 'Mito_天気'
+        # 天気を晴れ,くもり,雨のいずれかに分類する
         weather_cols = [col for col in ground_df.columns if('天気' in col)]
-        weather_cols.pop( weather_cols.index(label_name) )
         ground_df = wdfproc.replace_weather(
                             ground_df, columns=weather_cols, 
                              mode=wdfproc.WeatherConvertMode.Coarse)
         
-        ground_df = wdfproc.replace_weather(ground_df, columns=[label_name])
-
         # 浮動小数点数を32ビットに変換する
         ground_df = util.type_to_float32(ground_df)
 
@@ -164,10 +162,10 @@ class WeatherStationLoader(AbsLoader):
         # 不要な列を除去する
         highrise_df = wdfproc.drop_columns(
             highrise_df, 
-            [ '高度', '1000', '925', '900', '800', '600', '400']
+            [ '高度', '400', '350', '300']
+            #[ '高度', '1000', '925', '900', '800', '600', '400']
         )
-        #highrise_df.to_csv('highrise4.csv')
-    
+
         print(highrise_df.info())
         
         return highrise_df

@@ -3,7 +3,7 @@
 import os
 from enum import Enum
 from model import ModelRandomForest, ModelXgboost, ModelDnn
-from runner import WeatherStationForecastRunner, GsmForecastRunner
+from runner import WeatherStationForecastRunner2020Ver1, GsmForecastRunner
 
 class ModelKind(Enum):
     RandomForest = 1    # ランダムフォレスト
@@ -19,11 +19,9 @@ class RunnerKind(Enum):
 ##################################################
 if __name__ == '__main__':
     
-    #model_kind = ModelKind.DNN
-    #runner_kind = RunnerKind.WeatherStationForecast
-    model_kind = ModelKind.RandomForest
-    runner_kind = RunnerKind.GsmForecastRunner
-    
+    model_kind = ModelKind.XGBoost
+    runner_kind = RunnerKind.WeatherStationForecast
+
     ##############################
     if model_kind == ModelKind.RandomForest:
         # ランダムフォレスト
@@ -39,12 +37,12 @@ if __name__ == '__main__':
         # XGBoost
         run_name = 'xgboost'
         xbg_param = {
-            'max_depth': 4, 'eta': 0.05, 'subsample': 0.9, 
+            'max_depth': 5, 'eta': 0.05, 'subsample': 1.0, 
             'objective': 'multi:softmax', 'num_class': 4
         }
         model_parmas = {
             'xgb_param' : xbg_param, 'num_round' : 1000, 
-            'early_stopping_rounds' : 20, 'verbose_eval' : 50,
+            'early_stopping_rounds' : 40, 'verbose_eval' : 50,
             'model_dir' : 'model'
         }
         model = ModelXgboost(run_name, model_parmas)
@@ -74,10 +72,12 @@ if __name__ == '__main__':
         runner_param = {
             'base_dir'      :  os.getcwd(),
             'temp_dir'      : 'temp',
-            'input_dir'     : 'input2_all',
-            'output_dir'    :  'output'
+            'input_dir'     : 'input2',
+            'output_dir'    :  'output',
+            'class_names'   : ['Sunny', 'Cloud', 'Rain'],
+            'label_name'    : 'Mito_天気'
         }
-        runner = WeatherStationForecastRunner(run_name, model, runner_param)
+        runner = WeatherStationForecastRunner2020Ver1(run_name, model, runner_param)
     
     ##############################
     elif runner_kind == RunnerKind.GsmForecastRunner:
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         runner = GsmForecastRunner(run_name, model, runner_param)
     
     # クロスバリデーション実行
-    #runner.run_train_cv()
+    runner.run_train_cv(4)
     
     # 学習実行
     runner.run_train_all()

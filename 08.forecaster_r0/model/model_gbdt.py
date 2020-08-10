@@ -114,7 +114,12 @@ class ModelXgboost(AbsModel):
     def plot_feature_importances(self, filepath):
         xgb.plot_importance(self._model)
         plt.savefig(filepath)
-        #return self._model.feature_importances_
+
+    ##################################################
+    # 特徴量の重要度を返す
+    ##################################################
+    def get_fscore(self):
+        return self._model.get_fscore()
         
     ##################################################
     # Graphvizのグラフをファイルに出力する

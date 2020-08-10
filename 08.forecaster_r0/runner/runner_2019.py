@@ -151,8 +151,10 @@ class Runner2019(AbsRunner):
                 # モデルがDNNの場合はOne-Hotラベル表現用の正解率を表示する
                 ty_onehot = keras.utils.to_categorical(self._test_y, num_classes=self._label_num)
                 util.print_accuracy_one_hot(ty_onehot, pred_y, self._class_names)
+                util.print_precision_and_recall_one_hot(vy_onehot, pred_y, self._class_names)
             else:
                 util.print_accuracy(self._test_y, pred_y, self._class_names)
+                util.print_precision_and_recall(vy, pred_y, self._class_names)
             
             # 特徴量の重要度を表示する
             #print('#################################')

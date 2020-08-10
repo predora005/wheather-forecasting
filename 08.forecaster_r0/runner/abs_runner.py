@@ -46,7 +46,7 @@ class AbsRunner(metaclass=ABCMeta):
     # クロスバリデーションで学習・評価を行う
     ##################################################
     @abstractmethod
-    def run_train_cv(self):
+    def run_train_cv(self, fold_splits):
         raise NotImplementedError()
     
     ##################################################

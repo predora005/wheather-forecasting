@@ -209,18 +209,26 @@ def print_precision_and_recall_one_hot(test_y, pred_y, class_names):
         
 
 ##################################################
-# 特徴量の重要度を表示する
+# 特徴量の重要度を出力する(scikit-learnの決定木用)
 ##################################################
-def show_importance_of_feature(importances, feature_names, png_file=None, csv_file=None):
+def output_importance_of_feature_for_sklearn_dtree(importances, feature_names, png_path=None, csv_path=None):
     
     feature_importances = pd.DataFrame(importances, index=feature_names, columns=['Importance'])
     feature_importances = feature_importances.sort_values(by='Importance', ascending=False)
     
-    if csv_file is not None:
-        feature_importances.to_csv(csv_file)
+    if csv_path is not None:
+        feature_importances.to_csv(csv_path)
     
-    if png_file is not None:
+    if png_path is not None:
         feature_importances.plot(kind='bar', figsize=(20,20))
-        plt.savefig(png_file, bbox_inches='tight')
+        plt.savefig(png_path, bbox_inches='tight')
     
+##################################################
+# 特徴量の重要度を出力する(xgboostの決定木用)
+##################################################
+def output_importance_of_feature_for_xgboost(fscore, csv_path):
+    
+    feature_importances = pd.Series(fscore, name='Importance')
+    feature_importances = feature_importances.sort_values(ascending=False)
+    feature_importances.to_csv(csv_path)
     
