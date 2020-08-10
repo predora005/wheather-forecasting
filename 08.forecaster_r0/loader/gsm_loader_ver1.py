@@ -15,7 +15,7 @@ from wdfproc import WeatherConvertMode
 # GSMデータロードクラス
 ##################################################
 class GsmLoader2020Ver1(AbsLoader):
-    """データロードクラス
+    """ GSMデータロードクラス
         
     Attributes:
         _base_dir (string)      : ベースディレクトリ
@@ -57,8 +57,8 @@ class GsmLoader2020Ver1(AbsLoader):
         
         # GSMデータと地上気象データをマージする
         df = pd.merge(gsm_df, ground_df, on=('日付','時'))
-        print(df.info())
-
+        #print(df.info())
+        
         return df
         
     ##################################################

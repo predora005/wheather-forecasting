@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
 # GSMデータを用いた学習・評価・予測 実行クラス
 # 2020 Ver1。
 # 改善前の初期状態。
-####################################################################################################
+##################################################
 class GsmForecastRunner2020Ver1(AbsRunner):
     """ GSMデータを用いた学習・評価・予測 実行クラス
 
