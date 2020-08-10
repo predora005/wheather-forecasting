@@ -117,6 +117,7 @@ class WeatherStationForecastRunner2020Ver1(AbsRunner):
         self._load_data()
         
         train_x, train_y = self._train_x, self._train_y
+        test_x, test_y = self._test_x, self._test_y
         
         # モデルがDNNの場合はデータを正規化する
         if type(self._model) is ModelDnn:
@@ -125,7 +126,7 @@ class WeatherStationForecastRunner2020Ver1(AbsRunner):
             self._train_all_scaler, train_x, _ = util.max_min_scale(train_x, None)
             
         #　学習実行
-        self._model.train(train_x, train_y)
+        self._model.train(train_x, train_y, test_x, test_y)
         self.is_trained_all = True
     
     ##################################################
@@ -239,7 +240,7 @@ class WeatherStationForecastRunner2020Ver1(AbsRunner):
             (type(model) is ModelXgboost):
             
             # 出力ディレクトリを作成する
-            output_dir = os.path.join(self._base_dir, self._output_dir)
+            output_dir = os.path.join(self._base_dir, self._output_dir, self._run_name)
             os.makedirs(output_dir, exist_ok=True)
             
             # 出力先のファイルパスを設定する
@@ -258,8 +259,8 @@ class WeatherStationForecastRunner2020Ver1(AbsRunner):
                     importances, feature_names, fig_path, csv_path)
             
             elif type(model) is ModelXgboost:
-                fscore = model.get_fscore()
-                util.output_importance_of_feature_for_xgboost(fscore, csv_path)
+                gain = model.get_gain()
+                util.output_importance_of_feature_for_xgboost(gain, csv_path)
                 model.plot_feature_importances(fig_path)
 
     ##################################################
@@ -271,8 +272,12 @@ class WeatherStationForecastRunner2020Ver1(AbsRunner):
         if  (type(model) is ModelRandomForest) or \
             (type(model) is ModelXgboost):
             
-            file_name = 'graphviz_{0:s}.png'.format(run_fold_name)
-            file_path = os.path.join(self._base_dir, self._output_dir, file_name)
+            file_name = 'decision_tree_{0:s}.png'.format(run_fold_name)
+            file_path = os.path.join(self._base_dir, self._output_dir, self._run_name, file_name)
+            
+            dir_path = os.path.join(self._base_dir, self._output_dir, self._run_name, 'dtree')
+            file_prefix = 'decision_tree_{0:s}'.format(run_fold_name)
+            num_trees = 3
             
             if type(model) is ModelRandomForest:
                 estimators = model.get_estimators()[0] 
@@ -282,6 +287,6 @@ class WeatherStationForecastRunner2020Ver1(AbsRunner):
                 util.export_graphviz(file_path, estimators, feature_names, class_names)
             
             elif type(model) is ModelXgboost:
-                model.export_graphviz(file_path)
+                model.export_graphviz(dir_path, file_prefix, num_trees)
 
         

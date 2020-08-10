@@ -37,8 +37,8 @@ if __name__ == '__main__':
         # XGBoost
         run_name = 'xgboost'
         xbg_param = {
-            'max_depth': 5, 'eta': 0.05, 'subsample': 1.0, 
-            'objective': 'multi:softmax', 'num_class': 4
+            'max_depth': 4, 'eta': 0.1, 'subsample': 1.0, 
+            'objective': 'multi:softmax', 'num_class': 3
         }
         model_parmas = {
             'xgb_param' : xbg_param, 'num_round' : 1000, 
@@ -102,9 +102,9 @@ if __name__ == '__main__':
     runner.run_train_cv(4)
     
     # 学習実行
-    runner.run_train_all()
+    #runner.run_train_all()
     
     # テストデータで予測を行う
-    runner.run_predict_all()
+    #runner.run_predict_all()
     
     

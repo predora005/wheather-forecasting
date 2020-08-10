@@ -58,10 +58,12 @@ class ModelXgboost(AbsModel):
         num_round = self._params['num_round']
         early_stopping_rounds = self._params['early_stopping_rounds']
         verbose_eval = self._params['verbose_eval']
+        evals_result = {}
         
         self._model = xgb.train(
-            xgb_param, dtrain, num_round, evallist, 
-            early_stopping_rounds = early_stopping_rounds, 
+            params=xgb_param, dtrain=dtrain, num_boost_round=num_round, 
+            evals=evallist, evals_result=evals_result,
+            early_stopping_rounds=early_stopping_rounds, 
             verbose_eval = verbose_eval
         )
 
@@ -111,23 +113,53 @@ class ModelXgboost(AbsModel):
     ##################################################
     # 特徴量の重要度をプロットする
     ##################################################
-    def plot_feature_importances(self, filepath):
-        xgb.plot_importance(self._model)
-        plt.savefig(filepath)
+    def plot_feature_importances(self, filepath, num_features=20):
+        fig = plt.figure(figsize=(4.8, 10.24), dpi=100)
+        ax = fig.add_subplot(1, 1, 1)
+        xgb.plot_importance(self._model, ax=ax, importance_type='gain', max_num_features=num_features)
+
+        if os.path.isfile(filepath):
+            os.remove(filepath)
+        plt.savefig(filepath, bbox_inches="tight")
 
     ##################################################
     # 特徴量の重要度を返す
+    #   Gain: 各特徴量がどれだけ評価を改善させたか
     ##################################################
-    def get_fscore(self):
-        return self._model.get_fscore()
+    def get_gain(self):
+        return self._model.get_score(importance_type='gain')
+        
+    ##################################################
+    # 特徴量の重要度を返す
+    #   Weight: 各特徴量が分岐に使用された回数
+    ##################################################
+    def get_weight(self):
+        return self._model.get_score(importance_type='weight')
         
     ##################################################
     # Graphvizのグラフをファイルに出力する
     ##################################################
-    def export_graphviz(self, filepath):
-        #xgb.to_graphviz(self._model, num_trees=1)
-        #xgb.plot_tree(bst, num_trees=2, ax=axes[0])
+    def export_graphviz(self, dir_path, file_prefix, num_trees):
         
-        xgb.plot_tree(self._model, num_trees=1)
-        plt.savefig(filepath)
+        os.makedirs(dir_path, exist_ok=True)
         
+        # 描画領域を作成
+        fig = plt.figure(figsize=(40.96, 4.8), dpi=200)
+        ax = fig.add_subplot(1, 1, 1)
+        
+        # num_trees分の決定木を出力する
+        for i in range(num_trees):
+            xgb.plot_tree(self._model, ax=ax, num_trees=i)
+            
+            file_name = '{0:s}_{1:04d}.png'.format(file_prefix, i)
+            file_path = os.path.join(dir_path, file_name)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            plt.savefig(file_path, bbox_inches="tight")
+        
+        
+        #dump = self._model.get_dump()
+        
+        #graph1 = xgb.to_graphviz(self._model)
+        #graph1.format = 'png'
+        #graph1.render('tree1')
