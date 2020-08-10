@@ -163,7 +163,7 @@ class WeatherStationLoader2020Ver1(AbsLoader):
         highrise_df = wdfproc.drop_columns(
             highrise_df, 
             #[ '高度', '400', '350', '300']
-            [ '高度', '1000', '925', '900', '800', '600', '400', '350', '300']
+            [ '1000', '925', '900', '800', '600', '400', '350', '300']
         )
 
         print(highrise_df.info())
