@@ -14,7 +14,7 @@ from wdfproc import WeatherConvertMode
 ##################################################
 # GSMデータロードクラス
 ##################################################
-class GsmLoader(AbsLoader):
+class GsmLoader2020Ver1(AbsLoader):
     """データロードクラス
         
     Attributes:
@@ -26,11 +26,11 @@ class GsmLoader(AbsLoader):
     ##################################################
     # コンストラクタ
     ##################################################
-    def __init__(self, base_dir, temp_dirname, input_dirname, input2_dirname, 
+    def __init__(self, base_dir, temp_dirname, input_dirname, label_name, input2_dirname, 
                     thinout_interval, weather_convert_mode):
         
         # 抽象クラスのコンストラクタ
-        super().__init__(base_dir, temp_dirname, input_dirname)
+        super().__init__(base_dir, temp_dirname, input_dirname, label_name)
         
         self._input2_dirname = input2_dirname
         self._input2_dir = os.path.join(self._base_dir, self._input2_dirname)
@@ -75,9 +75,6 @@ class GsmLoader(AbsLoader):
             # 読み込み済み、かつ、リロード無しの場合は、
             # 保存したファイルを読み込む
             gsm_df = pd.read_csv(gsm_csv, index_col=0, parse_dates=[1])
-            # DEBUG
-            #gsm_df = gsm.thin_out_gsm(gsm_df, interval=self._thinout_interval)
-            #gsm_df.to_csv(os.path.join(self._temp_dir, 'gsm_intv.csv'))
         else:
             gsm_df = gsm.load_gsm_csv(self._input_dir)
             gsm_df = gsm.thin_out_gsm(gsm_df, interval=self._thinout_interval)
@@ -134,22 +131,48 @@ class GsmLoader(AbsLoader):
         
         # 3時,9時,15時,21時のデータを抽出する
         ground_df = util.extract_row_isin(ground_df, '時', [3, 9, 15, 21])
-    
+        
+        # 天気記号を数値に変換する
+        ground_df = wdfproc.convert_symbol_to_number(ground_df)
+        
+        # 地上気象データから不要データを除去する
+        ground_df = wdfproc.drop_unneeded_ground(ground_df)
+        
+        # 風速・風向きを数値に変換する
+        ground_df = wdfproc.convert_wind_to_vector_ground(ground_df)
+        
         # 天気を数値に変換する
         ground_df = wdfproc.convert_weather_to_interger(ground_df)
-
+        
+        # 雲量を浮動小数点数に変換する
+        ground_df = wdfproc.convert_cloud_volume_to_float(ground_df)
+        
         # 天気を所定の境界値で分類する
         if self._weather_convert_mode == 'rain_or_not':
             convert_mode = WeatherConvertMode.RainOrNot
         else:
             convert_mode = WeatherConvertMode.Coarse
         
-        ground_df = wdfproc.replace_weather(ground_df, columns=['Mito_天気'], mode=convert_mode)
-        #ground_df = wdfproc.replace_weather(ground_df, columns=['Mito_天気'], mode=WeatherConvertMode.RainOrNot)
+        # 天気を晴れ,くもり,雨のいずれかに分類する
+        weather_cols = [col for col in ground_df.columns if('天気' in col)]
+        ground_df = wdfproc.replace_weather(
+                            ground_df, columns=weather_cols, 
+                             mode=wdfproc.WeatherConvertMode.Coarse)
+        
+        # 不要な列を除去する
+        ground_df = wdfproc.drop_columns(
+            ground_df, 
+            #[ '現地気圧', '海面気圧', '降水量', '気温', '露点温度', '蒸気圧', '湿度', '風速', 
+            #  '日照時間', '全天日射', '降雪', '積雪', '視程', ]
+            [ '現地気圧', '露点温度', '蒸気圧', '日照時間', 
+              '降雪', '積雪', '視程', '全天日射' ]
+        )
+        
+        #ground_df = wdfproc.replace_weather(ground_df, columns=[self._label_name], mode=convert_mode)
         
         # 水戸の天気,海面気圧,気温,湿度を抽出する
-        extract_columns = ['日付', '時', 'Mito_海面気圧(hPa)', 'Mito_気温(℃)', 'Mito_湿度(％)', 'Mito_天気']
-        ground_df = ground_df.loc[:, extract_columns]
+        #extract_columns = ['日付', '時', 'Mito_海面気圧(hPa)', 'Mito_気温(℃)', 'Mito_湿度(％)', 'Mito_天気']
+        #ground_df = ground_df.loc[:, extract_columns]
         
         return ground_df
         
