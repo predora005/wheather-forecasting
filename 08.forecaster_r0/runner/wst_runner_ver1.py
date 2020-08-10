@@ -9,7 +9,7 @@ import keras
 
 import util
 from loader import WeatherStationLoader2020Ver1
-from model import ModelRandomForest, ModelXgboost, ModelDnn
+from model import ModelXgboost, ModelDnn
 
 from sklearn.model_selection import train_test_split, KFold
 
@@ -173,9 +173,6 @@ class WeatherStationForecastRunner2020Ver1(AbsRunner):
             if type(self._model) is ModelDnn:
                 # DNNの場合は平均値で置換する
                 df = util.fill_na_avg(df)
-            elif type(self._model) is ModelRandomForest:
-                # ランダムフォレストの場合は-9999で置換する
-                df = df.fillna(-9999)
             elif type(self._model) is ModelXgboost:
                 # XGBoostの場合はNaNのままで問題無し
                 pass
@@ -235,58 +232,45 @@ class WeatherStationForecastRunner2020Ver1(AbsRunner):
     ##################################################
     def _show_importance_of_feature(self, model, run_fold_name):
         
-        # ランダムフォレストとXGBoostの場合
-        if  (type(model) is ModelRandomForest) or \
-            (type(model) is ModelXgboost):
+        # XGBoostの場合
+        if type(model) is ModelXgboost:
             
             # 出力ディレクトリを作成する
             output_dir = os.path.join(self._base_dir, self._output_dir, self._run_name)
             os.makedirs(output_dir, exist_ok=True)
             
-            # 出力先のファイルパスを設定する
+            # 特徴量の重要度をプロットする
             fig_file = 'freature_importances_{0:s}.png'.format(run_fold_name)
-            csv_file = 'freature_importances_{0:s}.csv'.format(run_fold_name)
             fig_path = os.path.join(output_dir, fig_file)
-            csv_path = os.path.join(output_dir, csv_file)
-    
-            if type(model) is ModelRandomForest:
-                
-                # 重要度と特徴量の名称を取得する
-                importances = model.get_feature_importances()
-                feature_names = self._train_x.columns
-                
-                util.output_importance_of_feature_for_sklearn_dtree(
-                    importances, feature_names, fig_path, csv_path)
+            model.plot_feature_importances(fig_path)
             
-            elif type(model) is ModelXgboost:
-                gain = model.get_gain()
-                util.output_importance_of_feature_for_xgboost(gain, csv_path)
-                model.plot_feature_importances(fig_path)
+            # 特徴量の重要度(ゲイン)を出力する
+            gain_file = 'freature_importances_{0:s}_gain.csv'.format(run_fold_name)
+            gain_path = os.path.join(output_dir, gain_file)
+            gain = model.get_gain()
+            util.output_importance_of_feature_for_xgboost(gain, gain_path)
+            
+            # 特徴量の重要度(Weight: 頻度)を出力する
+            weight_file = 'freature_importances_{0:s}_weight.csv'.format(run_fold_name)
+            weight_path = os.path.join(output_dir, weight_file)
+            weight = model.get_weight()
+            util.output_importance_of_feature_for_xgboost(weight, weight_path)
 
     ##################################################
     # Graphvizのグラフをファイルに出力する
     ##################################################
     def _export_graphviz(self, model, run_fold_name):
         
-        # ランダムフォレストとXGBoostの場合
-        if  (type(model) is ModelRandomForest) or \
-            (type(model) is ModelXgboost):
+        # XGBoostの場合
+        if type(model) is ModelXgboost:
             
-            file_name = 'decision_tree_{0:s}.png'.format(run_fold_name)
-            file_path = os.path.join(self._base_dir, self._output_dir, self._run_name, file_name)
+            #file_name = 'decision_tree_{0:s}.png'.format(run_fold_name)
+            #file_path = os.path.join(self._base_dir, self._output_dir, self._run_name, file_name)
             
             dir_path = os.path.join(self._base_dir, self._output_dir, self._run_name, 'dtree')
             file_prefix = 'decision_tree_{0:s}'.format(run_fold_name)
             num_trees = 3
             
-            if type(model) is ModelRandomForest:
-                estimators = model.get_estimators()[0] 
-                feature_names = self._train_x.columns
-                class_names = self._class_names
-                
-                util.export_graphviz(file_path, estimators, feature_names, class_names)
+            model.export_graphviz(dir_path, file_prefix, num_trees)
             
-            elif type(model) is ModelXgboost:
-                model.export_graphviz(dir_path, file_prefix, num_trees)
-
         

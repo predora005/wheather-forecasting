@@ -128,7 +128,7 @@ class ModelDnn(AbsModel):
                 train_x, train_y_onehot, 
                 epochs=epochs, batch_size=batch_size, 
                 shuffle=True, verbose=0, callbacks=[early_stopping], 
-                #validation_data=validation_data,
+                validation_data=validation_data,
                 #validation_split=validation_split
             )
             
