@@ -88,15 +88,15 @@ class GsmLoader2020Ver1(AbsLoader):
     def _process_gsm_weather(self, gsm_df):
         
         # 不要な列を削る
-        drop_columns = [
-            '高度', '地上気圧', 
-            '全雲量', '下層雲量', 
-            '積算降水量_06h', '積算降水量_12h',
-        #    '高度', '東西風', '南北風', '地上気圧', 
-        #    '下層雲量', '中層雲量', '上層雲量',
-        #    '積算降水量_03h', '積算降水量_06h', '積算降水量_12h',
-        ]
-        gsm_df = wdfproc.drop_columns(gsm_df, drop_columns)
+        #drop_columns = [
+        #    '高度', '地上気圧', 
+        #    '全雲量', '下層雲量', 
+        #    '積算降水量_06h', '積算降水量_12h',
+        ##    '高度', '東西風', '南北風', '地上気圧', 
+        ##    '下層雲量', '中層雲量', '上層雲量',
+        ##    '積算降水量_03h', '積算降水量_06h', '積算降水量_12h',
+        #]
+        #gsm_df = wdfproc.drop_columns(gsm_df, drop_columns)
 
         # 地表と指定気圧面の差を追加する
         #gsm_df = gsm.add_difference_surface_and_pall(gsm_df)
@@ -106,7 +106,7 @@ class GsmLoader2020Ver1(AbsLoader):
         
         # 指定した緯度,経度のデータを抽出する
         #   静岡〜いわき (35,138.8)〜(36.6,140.7)
-        gsm_df = gsm.extract_latitude_and_longitude(gsm_df, latitudes=(35,37), longitudes=(138, 141))
+        #gsm_df = gsm.extract_latitude_and_longitude(gsm_df, latitudes=(35,37), longitudes=(138, 141))
 
         return gsm_df
     
