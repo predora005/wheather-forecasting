@@ -116,7 +116,7 @@ class ModelDnn(AbsModel):
         #   patience: 指定した回数改善しなければ終了
         early_stopping = keras.callbacks.EarlyStopping(
             monitor='val_loss', min_delta=0, patience=early_stopping_patience, 
-            verbose=1, mode='auto')
+            restore_best_weights=True, verbose=1, mode='auto')
         
         # self._max_epoch回数分、学習を実行する
         epoch = 0

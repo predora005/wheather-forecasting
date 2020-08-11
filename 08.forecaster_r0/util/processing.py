@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 ##################################################
 # Max-Minスケール化(0〜1の範囲に収まるように標準化)
@@ -9,6 +9,21 @@ from sklearn.preprocessing import MinMaxScaler
 def max_min_scale(train_data, test_data=None):
     
     scaler = MinMaxScaler()
+    train_scaled = scaler.fit_transform(train_data)
+    
+    if test_data is not None:
+        test_scaled  = scaler.transform(test_data)
+    else:
+        test_scaled = None
+    
+    return scaler, train_scaled, test_scaled
+    
+##################################################
+# 標準化(平均0, 分散1になるように変換)
+##################################################
+def standardize(train_data, test_data=None):
+    
+    scaler = StandardScaler()
     train_scaled = scaler.fit_transform(train_data)
     
     if test_data is not None:
@@ -128,5 +143,104 @@ def add_time_variation(df, exclude_columns=['時', '日付'], inplace=True):
         # 時間変化量の列を作成
         new_df[new_column] = new_df[column].diff()
         
+    return new_df
+    
+##################################################
+# 月平均との差分をDataFrameに追加する
+##################################################
+def add_difference_monthly_mean(df, columns, inplace=True):
+    """ 月平均との差分をDataFrameに追加する
+
+    Args:
+        df(DataFrame)   : 変換対象のDataFrame
+        columns(list)   : 変換対象の列
+        inplace(bool)   : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    # 変換対象の列をリストに格納する
+    base_columns = []
+    for base_col in columns:
+        base_cols = [col for col in df.columns if(base_col in col)]
+        base_columns.extend(base_cols)
+    
+    # 月の列を追加する
+    new_df['月'] = new_df['日付'].dt.month
+    
+    # 月ごとの平均値を算出する
+    mean = new_df.groupby(['月']).mean()
+    
+    # 1列ずつ月平均値との差分列を追加する
+    for column in base_columns:
+        
+        # 新しい列を追加する
+        new_column = '{0:s}_diff_month'.format(column)
+        new_df[new_column] = new_df[column]
+        
+        # 月数分ループ。月単位で平均値との差分を代入する。
+        for index, row in mean.iterrows():
+            
+            month = index
+            new_df[new_column] = new_df[new_column].mask(new_df['月']==month, new_df[column] - row[column])
+    
+    # 不要な列を削除する    
+    new_df = new_df.drop(columns=['月'])
+    #new_df = new_df.drop(columns=base_columns)
+    
+    return new_df
+    
+##################################################
+# 月平均をDataFrameに追加する
+##################################################
+def add_monthly_mean(df, columns, inplace=True):
+    """ 月平均をDataFrameに追加する
+
+    Args:
+        df(DataFrame)   : 変換対象のDataFrame
+        columns(list)   : 変換対象の列
+        inplace(bool)   : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    # 変換対象の列をリストに格納する
+    add_columns = []
+    for add_col in columns:
+        add_cols = [col for col in df.columns if(add_col in col)]
+        add_columns.extend(add_cols)
+    
+    # 月の列を追加する
+    new_df['月'] = new_df['日付'].dt.month
+    
+    # 月ごとの平均値を算出する
+    mean = new_df.groupby(['月']).mean()
+    
+    # 1列ずつ月の平均値を追加する
+    for column in add_columns:
+        
+        # 新しい列を追加する
+        new_column = '{0:s}_month_mean'.format(column)
+        new_df[new_column] = new_df[column]
+        
+        # 月数分ループ。月単位で平均値との差分を代入する。
+        for index, row in mean.iterrows():
+            
+            month = index
+            new_df[new_column] = new_df[new_column].mask(new_df['月']==month, row[column])
+    
+    # 不要な列を削除する    
+    new_df = new_df.drop(columns=['月'])
+    
     return new_df
     

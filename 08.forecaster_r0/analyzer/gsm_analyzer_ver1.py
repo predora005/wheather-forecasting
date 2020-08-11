@@ -69,40 +69,39 @@ class GsmDataAnalyzer2020Ver1:
         
         sns.set_palette('muted')
         
-        ## 積算降水量と水戸-天気の関係を可視化する
-        #self._visualize_total_precipitation_and_weather(features, label, output_dirpath)
-        #
-        ## 雲量と水戸-天気の関係を可視化する
-        #self._visualize_cloud_cover_and_weather(features, label, output_dirpath)
-        #
-        ## 気温と水戸-天気の関係を可視化する
-        #self._visualize_temperature_and_weather(features, label, output_dirpath)
-        #
-        ## 気温と日付の関係を可視化する
-        #self._visualize_temperature_and_datetime(features, label, output_dirpath)
-        #
-        ## 高度と水戸-天気の関係を可視化する
-        #self._visualize_altitude_and_weather(features, label, output_dirpath)
-        #
-        ## 水戸-天気と日付の関係を可視化する
-        #self._visualize_weather_and_datetime(features, label, output_dirpath)
-        #
-        ## 風速と水戸-天気の関係を可視化する
-        #self._visualize_wind_and_weather(features, label, output_dirpath)
-        #
+        # 積算降水量と水戸-天気の関係を可視化する
+        self._visualize_total_precipitation_and_weather(features, label, output_dirpath)
+        
+        # 雲量と水戸-天気の関係を可視化する
+        self._visualize_cloud_cover_and_weather(features, label, output_dirpath)
+        
+        # 気温と水戸-天気の関係を可視化する
+        self._visualize_temperature_and_weather(features, label, output_dirpath)
+        
+        # 気温と日付の関係を可視化する
+        self._visualize_temperature_and_datetime(features, label, output_dirpath)
+        
+        # 高度と水戸-天気の関係を可視化する
+        self._visualize_altitude_and_weather(features, label, output_dirpath)
+        
+        # 水戸-天気と日付の関係を可視化する
+        self._visualize_weather_and_datetime(features, label, output_dirpath)
+        
+        # 風速と水戸-天気の関係を可視化する
+        self._visualize_wind_and_weather(features, label, output_dirpath)
+        
         # 気温と高度の関係を可視化する
-        #self._visualize_temperature_and_altitude(features, label, output_dirpath)
-        #
-        ## 湿度と水戸-天気の関係を可視化する
-        #self._visualize_humidity_and_weather(features, label, output_dirpath)
-        #
-        ## 積算降水量と雲量の関係を可視化する
-        #self._visualize_total_precipitation_and_cloud_cover(features, label, output_dirpath)
+        self._visualize_temperature_and_altitude(features, label, output_dirpath)
+        
+        # 湿度と水戸-天気の関係を可視化する
+        self._visualize_humidity_and_weather(features, label, output_dirpath)
+        
+        # 積算降水量と雲量の関係を可視化する
+        self._visualize_total_precipitation_and_cloud_cover(features, label, output_dirpath)
         
         # 上昇流と水戸-天気の関係を可視化する
         self._visualize_updraft_and_weather(features, label, output_dirpath)
-        
-        
+
     ##################################################
     # 積算降水量と水戸-天気の関係を可視化する
     ##################################################
@@ -415,7 +414,7 @@ class GsmDataAnalyzer2020Ver1:
     ##################################################
     def _visualize_wind_and_weather(self, features, lebel_data, output_dirpath):
         
-        wind_dirpath = os.path.join(output_dirpath, 'wind_u')
+        wind_dirpath = os.path.join(output_dirpath, 'wind')
         os.makedirs(wind_dirpath, exist_ok=True)
         
         df = pd.DataFrame( {
@@ -425,14 +424,21 @@ class GsmDataAnalyzer2020Ver1:
             '700hPa_東西風' : features['700hPa_lat35.60_long140.000_東西風'],
             '850hPa_東西風' : features['850hPa_lat35.60_long140.000_東西風'],
             '地上_東西風'   : features['Surf_lat35.60_long140.000_東西風'],
+            '500hPa_南北風' : features['500hPa_lat35.60_long140.000_南北風'],
+            '700hPa_南北風' : features['700hPa_lat35.60_long140.000_南北風'],
+            '850hPa_南北風' : features['850hPa_lat35.60_long140.000_南北風'],
+            '地上_南北風'   : features['Surf_lat35.60_long140.000_南北風'],
             '水戸_天気'     : lebel_data
         } )
         
         label = '水戸_天気'
-        columns = [ '500hPa_東西風', '700hPa_東西風', '850hPa_東西風', '地上_東西風']
+        columns = [ 
+            '500hPa_東西風', '700hPa_東西風', '850hPa_東西風', '地上_東西風',
+            '500hPa_南北風', '700hPa_南北風', '850hPa_南北風', '地上_南北風',
+        ]
         
         ##################################################
-        # 東西風 x 水戸-天気
+        # 風速 x 水戸-天気
         for column in columns:
             
             # KDEプロット
@@ -441,7 +447,7 @@ class GsmDataAnalyzer2020Ver1:
             min_value, max_value = df[column].min(), df[column].max()
             grid.set(xlim=(min_value, max_value))
             grid.add_legend()
-            filename = 'wind_u_{0:s}_kdeplot.png'.format(column)
+            filename = 'wind_{0:s}_kdeplot.png'.format(column)
             kdeplot_file = os.path.join(wind_dirpath, filename)
             grid.savefig(kdeplot_file)
             
@@ -450,7 +456,7 @@ class GsmDataAnalyzer2020Ver1:
             grid = sns.FacetGrid(df, col=label, height=3)
             grid.map(plt.hist, column, bins=20)
             grid.add_legend()
-            filename = 'wind_u_{0:s}_hist.png'.format(column)
+            filename = 'wind_{0:s}_hist.png'.format(column)
             hist_file = os.path.join(wind_dirpath, filename)
             grid.savefig(hist_file)
                 
@@ -459,7 +465,7 @@ class GsmDataAnalyzer2020Ver1:
         for column in columns:
             
             plot = sns.relplot(x='月', y=column, hue=label, kind='line', ci="sd", data=df)
-            filename = 'wind_u_{0:s}_month_lineplot.png'.format(column)
+            filename = 'wind_{0:s}_month_lineplot.png'.format(column)
             lineplot_file = os.path.join(wind_dirpath, filename)
             plot.savefig(lineplot_file)
         
@@ -467,7 +473,7 @@ class GsmDataAnalyzer2020Ver1:
         # 風速同士の関係を可視化する
         wind_df = df.drop(columns=['月', '月-時'])
         pair_grid = sns.pairplot(wind_df, hue=label);
-        pair_file = os.path.join(wind_dirpath, 'wind_u_pairplot.png')
+        pair_file = os.path.join(wind_dirpath, 'wind_pairplot.png')
         pair_grid.savefig(pair_file)
         
         plt.close()
@@ -601,12 +607,9 @@ class GsmDataAnalyzer2020Ver1:
             ('上層雲量', '全雲量'),
         ]
         
-        # 積算降水量が20mm以上の場合は、すべて20にする
-        #df['積算降水量_24h'] = df['積算降水量_24h'].where(df['積算降水量_24h'] > 20, 20)
-        #df['A'].where(df['A']>0, df['B'])
+        # 積算降水量が20mm以上の場合は、すべて50にする
         df['積算降水量_24h'] = df['積算降水量_24h'].where(df['積算降水量_24h'] < 50, 50)
-        print(df['積算降水量_24h'])
-        
+
         ##################################################
         # 積算降水量と雲量の関係を可視化する
         for col1, col2 in data_pair:
@@ -664,15 +667,6 @@ class GsmDataAnalyzer2020Ver1:
             hist_file = os.path.join(updraft_dirpath, filename)
             grid.savefig(hist_file)
                 
-        ##################################################
-        ## 月ごとの湿度と天気の関係を可視化する
-        #for column in columns:
-        #    
-        #    plot = sns.relplot(x='月', y=column, hue=label, kind='line', ci="sd", data=df)
-        #    filename = 'humidity_{0:s}_month_lineplot.png'.format(column)
-        #    lineplot_file = os.path.join(humidity_dirpath, filename)
-        #    plot.savefig(lineplot_file)
-        
         ##################################################
         # 上昇流同士の関係を可視化する
         df = df.drop(columns=['月'])
