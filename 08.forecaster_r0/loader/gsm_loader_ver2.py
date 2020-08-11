@@ -107,7 +107,7 @@ class GsmLoader2020Ver2(AbsLoader):
         #gsm_df = util.add_time_variation(gsm_df)
         
         # 月平均との差分を追加する
-        gsm_df = util.add_difference_monthly_mean(gsm_df, ['気温', '高度'])
+        #gsm_df = util.add_difference_monthly_mean(gsm_df, ['気温', '高度'])
         
         # 指定した緯度,経度のデータを抽出する
         #   静岡〜いわき (35,138.8)〜(36.6,140.7)
