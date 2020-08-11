@@ -11,6 +11,7 @@ if __name__ == '__main__':
     
     
     # GSMデータの分析クラス
+    run_name = 'gsm_ver1'
     analyzer_param = {
         'base_dir'              : os.getcwd(),
         'temp_dir'              : 'temp',
@@ -24,7 +25,7 @@ if __name__ == '__main__':
         #'class_names'           : ['Except for Rain', 'Rain'],
         'label_name'            : 'Mito_天気'
     }
-    analyzer = GsmDataAnalyzer2020Ver1(analyzer_param)
+    analyzer = GsmDataAnalyzer2020Ver1(run_name, analyzer_param)
     
     # 分析実行
     analyzer.run()
