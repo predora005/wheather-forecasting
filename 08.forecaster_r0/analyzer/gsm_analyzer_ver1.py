@@ -69,29 +69,39 @@ class GsmDataAnalyzer2020Ver1:
         
         sns.set_palette('muted')
         
-        # 積算降水量と水戸-天気の関係を可視化する
-        self._visualize_total_precipitation_and_weather(features, label, output_dirpath)
-        
-        # 雲量と水戸-天気の関係を可視化する
-        self._visualize_cloud_cover_and_weather(features, label, output_dirpath)
-        
-        # 気温と水戸-天気の関係を可視化する
-        self._visualize_temperature_cover_and_weather(features, label, output_dirpath)
-        
-        # 気温と日付の関係を可視化する
-        self._visualize_temperature_and_datetime(features, label, output_dirpath)
-        
-        # 高度と水戸-天気の関係を可視化する
-        self._visualize_altitude_and_weather(features, label, output_dirpath)
-        
-        # 水戸-天気と日付の関係を可視化する
-        self._visualize_weather_and_datetime(features, label, output_dirpath)
-        
-        # 風速と水戸-天気の関係を可視化する
-        self._visualize_wind_and_weather(features, label, output_dirpath)
-        
+        ## 積算降水量と水戸-天気の関係を可視化する
+        #self._visualize_total_precipitation_and_weather(features, label, output_dirpath)
+        #
+        ## 雲量と水戸-天気の関係を可視化する
+        #self._visualize_cloud_cover_and_weather(features, label, output_dirpath)
+        #
+        ## 気温と水戸-天気の関係を可視化する
+        #self._visualize_temperature_and_weather(features, label, output_dirpath)
+        #
+        ## 気温と日付の関係を可視化する
+        #self._visualize_temperature_and_datetime(features, label, output_dirpath)
+        #
+        ## 高度と水戸-天気の関係を可視化する
+        #self._visualize_altitude_and_weather(features, label, output_dirpath)
+        #
+        ## 水戸-天気と日付の関係を可視化する
+        #self._visualize_weather_and_datetime(features, label, output_dirpath)
+        #
+        ## 風速と水戸-天気の関係を可視化する
+        #self._visualize_wind_and_weather(features, label, output_dirpath)
+        #
         # 気温と高度の関係を可視化する
-        self._visualize_temperature_and_altitude(features, label, output_dirpath)
+        #self._visualize_temperature_and_altitude(features, label, output_dirpath)
+        #
+        ## 湿度と水戸-天気の関係を可視化する
+        #self._visualize_humidity_and_weather(features, label, output_dirpath)
+        #
+        ## 積算降水量と雲量の関係を可視化する
+        #self._visualize_total_precipitation_and_cloud_cover(features, label, output_dirpath)
+        
+        # 上昇流と水戸-天気の関係を可視化する
+        self._visualize_updraft_and_weather(features, label, output_dirpath)
+        
         
     ##################################################
     # 積算降水量と水戸-天気の関係を可視化する
@@ -210,7 +220,7 @@ class GsmDataAnalyzer2020Ver1:
     ##################################################
     # 気温と水戸-天気の関係を可視化する
     ##################################################
-    def _visualize_temperature_cover_and_weather(self, features, lebel_data, output_dirpath):
+    def _visualize_temperature_and_weather(self, features, lebel_data, output_dirpath):
         
         temp_dirpath = os.path.join(output_dirpath, 'temperature')
         os.makedirs(temp_dirpath, exist_ok=True)
@@ -261,7 +271,7 @@ class GsmDataAnalyzer2020Ver1:
         plt.close()
 
     ##################################################
-    # 気温と水戸-天気の関係を可視化する
+    # 気温と日付の関係を可視化する
     ##################################################
     def _visualize_temperature_and_datetime(self, features, lebel_data, output_dirpath):
         
@@ -495,9 +505,183 @@ class GsmDataAnalyzer2020Ver1:
             
             plot = sns.relplot(x=temp_column, y=altitude_column, hue=label, data=df)
             filename = 'temperature_x_altitude_{0:s}_relplot.png'.format(name)
+            relplot_file = os.path.join(temp_altitude_dirpath, filename)
+            plot.savefig(relplot_file)
+            
+            grid = sns.FacetGrid(df, col=label)
+            grid.map(plt.scatter, temp_column, altitude_column)
+            grid.add_legend()
+            filename = 'temperature_x_altitude_{0:s}_scatter.png'.format(name)
             scatter_plot_file = os.path.join(temp_altitude_dirpath, filename)
-            plot.savefig(scatter_plot_file)
+            grid.savefig(scatter_plot_file)
         
+    ##################################################
+    # 湿度と水戸-天気の関係を可視化する
+    ##################################################
+    def _visualize_humidity_and_weather(self, features, lebel_data, output_dirpath):
+        
+        humidity_dirpath = os.path.join(output_dirpath, 'humidity')
+        os.makedirs(humidity_dirpath, exist_ok=True)
+        
+        df = pd.DataFrame( {
+            '月'            : features['月'],
+            '500hPa_湿度'   : features['500hPa_lat34.80_long138.000_相対湿度'],
+            '700hPa_湿度'   : features['700hPa_lat34.80_long138.000_相対湿度'],
+            '850hPa_湿度'   : features['850hPa_lat34.80_long138.000_相対湿度'],
+            '地上_湿度'     : features['Surf_lat34.80_long138.000_相対湿度'],
+            '水戸_天気'     : lebel_data
+        } )
+        
+        label = '水戸_天気'
+        columns = [ '500hPa_湿度', '700hPa_湿度', '850hPa_湿度', '地上_湿度',]
+        
+        # 気温 x 水戸-天気
+        for column in columns:
+            
+            # KDEプロット
+            grid = sns.FacetGrid(df, hue=label, aspect=2)
+            grid.map(sns.kdeplot, column, shade=True)
+            min_value, max_value = df[column].min(), df[column].max()
+            grid.set(xlim=(min_value, max_value))
+            grid.add_legend()
+            filename = 'humidity_{0:s}_kdeplot.png'.format(column)
+            kdeplot_file = os.path.join(humidity_dirpath, filename)
+            grid.savefig(kdeplot_file)
+            
+            # ヒストグラム
+            #bins = np.arange(0, max_value, 1)
+            grid = sns.FacetGrid(df, col=label, height=3)
+            grid.map(plt.hist, column, bins=20)
+            grid.add_legend()
+            filename = 'humidity_{0:s}_hist.png'.format(column)
+            hist_file = os.path.join(humidity_dirpath, filename)
+            grid.savefig(hist_file)
+                
+        ##################################################
+        # 月ごとの湿度と天気の関係を可視化する
+        for column in columns:
+            
+            plot = sns.relplot(x='月', y=column, hue=label, kind='line', ci="sd", data=df)
+            filename = 'humidity_{0:s}_month_lineplot.png'.format(column)
+            lineplot_file = os.path.join(humidity_dirpath, filename)
+            plot.savefig(lineplot_file)
+        
+        ##################################################
+        # 湿度同士の関係を可視化する
+        wind_df = df.drop(columns=['月'])
+        pair_grid = sns.pairplot(df, hue=label);
+        pair_file = os.path.join(humidity_dirpath, 'humidity_pairplot.png')
+        pair_grid.savefig(pair_file)
+        
+        plt.close()
+    
+    ##################################################
+    # 積算降水量と雲量の関係を可視化する
+    ##################################################
+    def _visualize_total_precipitation_and_cloud_cover(self, features, lebel_data, output_dirpath):
+        
+        totalp_cloud_dirpath = os.path.join(output_dirpath, 'totalp_x_cloud')
+        os.makedirs(totalp_cloud_dirpath, exist_ok=True)
+        
+        df = pd.DataFrame( {
+            #'積算降水量_03h': features['Surf_lat35.60_long140.000_積算降水量_03h'], 
+            #'積算降水量_06h': features['Surf_lat35.60_long140.000_積算降水量_06h'], 
+            #'積算降水量_12h': features['Surf_lat35.60_long140.000_積算降水量_12h'], 
+            '積算降水量_24h': features['Surf_lat35.60_long140.000_積算降水量_24h'], 
+            '上層雲量'      : features['Surf_lat35.60_long140.000_上層雲量'],
+            #'中層雲量'      : features['Surf_lat35.60_long140.000_中層雲量'],
+            #'下層雲量'      : features['Surf_lat35.60_long140.000_下層雲量'],
+            '全雲量'        : features['Surf_lat35.60_long140.000_全雲量'],
+            '水戸_天気'     : lebel_data
+        } )
+        
+        label = '水戸_天気'
+        data_pair = [
+            ('積算降水量_24h', '上層雲量'), ('積算降水量_24h', '全雲量'), 
+            ('上層雲量', '全雲量'),
+        ]
+        
+        # 積算降水量が20mm以上の場合は、すべて20にする
+        #df['積算降水量_24h'] = df['積算降水量_24h'].where(df['積算降水量_24h'] > 20, 20)
+        #df['A'].where(df['A']>0, df['B'])
+        df['積算降水量_24h'] = df['積算降水量_24h'].where(df['積算降水量_24h'] < 50, 50)
+        print(df['積算降水量_24h'])
+        
+        ##################################################
+        # 積算降水量と雲量の関係を可視化する
+        for col1, col2 in data_pair:
+            
+            plot = sns.relplot(x=col1, y=col2, hue=label, data=df)
+            filename = '{0:s}_x_{1:s}_relplot.png'.format(col1, col2)
+            relplot_file = os.path.join(totalp_cloud_dirpath, filename)
+            plot.savefig(relplot_file)
+            
+            grid = sns.FacetGrid(df, col=label)
+            grid.map(plt.scatter, col1, col2)
+            grid.add_legend()
+            filename = '{0:s}_x_{1:s}_scatter.png'.format(col1, col2)
+            scatter_plot_file = os.path.join(totalp_cloud_dirpath, filename)
+            grid.savefig(scatter_plot_file)
+    
+    ##################################################
+    # 上昇流と水戸-天気の関係を可視化する
+    ##################################################
+    def _visualize_updraft_and_weather(self, features, lebel_data, output_dirpath):
+        
+        updraft_dirpath = os.path.join(output_dirpath, 'updraft')
+        os.makedirs(updraft_dirpath, exist_ok=True)
+        
+        df = pd.DataFrame( {
+            '月'            : features['月'],
+            '500hPa_上昇流' : features['500hPa_lat36.40_long140.000_上昇流'],
+            '700hPa_上昇流' : features['700hPa_lat36.40_long140.000_上昇流'],
+            '850hPa_上昇流' : features['850hPa_lat36.40_long140.000_上昇流'],
+            '水戸_天気'     : lebel_data
+        } )
+        
+        label = '水戸_天気'
+        columns = [ '500hPa_上昇流', '700hPa_上昇流', '850hPa_上昇流']
+        
+        ##################################################
+        # 上昇流 x 水戸-天気
+        for column in columns:
+            
+            # KDEプロット
+            grid = sns.FacetGrid(df, hue=label, aspect=2)
+            grid.map(sns.kdeplot, column, shade=True)
+            min_value, max_value = df[column].min(), df[column].max()
+            grid.set(xlim=(min_value, max_value))
+            grid.add_legend()
+            filename = 'updraft_{0:s}_kdeplot.png'.format(column)
+            kdeplot_file = os.path.join(updraft_dirpath, filename)
+            grid.savefig(kdeplot_file)
+            
+            # ヒストグラム
+            grid = sns.FacetGrid(df, col=label, height=3)
+            grid.map(plt.hist, column, bins=20)
+            grid.add_legend()
+            filename = 'updraft_{0:s}_hist.png'.format(column)
+            hist_file = os.path.join(updraft_dirpath, filename)
+            grid.savefig(hist_file)
+                
+        ##################################################
+        ## 月ごとの湿度と天気の関係を可視化する
+        #for column in columns:
+        #    
+        #    plot = sns.relplot(x='月', y=column, hue=label, kind='line', ci="sd", data=df)
+        #    filename = 'humidity_{0:s}_month_lineplot.png'.format(column)
+        #    lineplot_file = os.path.join(humidity_dirpath, filename)
+        #    plot.savefig(lineplot_file)
+        
+        ##################################################
+        # 上昇流同士の関係を可視化する
+        df = df.drop(columns=['月'])
+        pair_grid = sns.pairplot(df, hue=label);
+        pair_file = os.path.join(updraft_dirpath, 'updraft_pairplot.png')
+        pair_grid.savefig(pair_file)
+        
+        plt.close()
+    
     ##################################################
     # 学習・評価・予測用のデータをロードする
     ##################################################
