@@ -14,7 +14,7 @@ class ModelKind(Enum):
 ##################################################
 if __name__ == '__main__':
     
-    model_kind = ModelKind.DNN
+    model_kind = ModelKind.XGBoost
 
     ##############################
     if model_kind == ModelKind.XGBoost:

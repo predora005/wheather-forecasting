@@ -90,6 +90,9 @@ class GsmDataAnalyzer2020Ver1:
         # 風速と水戸-天気の関係を可視化する
         self._visualize_wind_and_weather(features, label, output_dirpath)
         
+        # 気温と高度の関係を可視化する
+        self._visualize_temperature_and_altitude(features, label, output_dirpath)
+        
     ##################################################
     # 積算降水量と水戸-天気の関係を可視化する
     ##################################################
@@ -458,6 +461,42 @@ class GsmDataAnalyzer2020Ver1:
         pair_grid.savefig(pair_file)
         
         plt.close()
+        
+    ##################################################
+    # 気温と高度の関係を可視化する
+    ##################################################
+    def _visualize_temperature_and_altitude(self, features, lebel_data, output_dirpath):
+        
+        temp_altitude_dirpath = os.path.join(output_dirpath, 'temperature_x_altitude')
+        os.makedirs(temp_altitude_dirpath, exist_ok=True)
+        
+        df = pd.DataFrame( {
+            '500hPa_気温'   : features['500hPa_lat36.40_long140.000_気温'] - 273.15,
+            '700hPa_気温'   : features['700hPa_lat36.40_long140.000_気温'] - 273.15,
+            '850hPa_気温'   : features['850hPa_lat36.40_long140.000_気温'] - 273.15,
+            '地上_気温'     : features['Surf_lat36.40_long138.000_気温'] - 273.15,
+            '500hPa_高度'   : features['500hPa_lat36.40_long140.000_高度'],
+            '700hPa_高度'   : features['700hPa_lat36.40_long140.000_高度'],
+            '850hPa_高度'   : features['850hPa_lat36.40_long140.000_高度'],
+            '地上_海面気圧' : features['Surf_lat36.40_long140.000_海面更正気圧'] / 100,
+            '水戸_天気'     : lebel_data
+        } )
+        
+        label = '水戸_天気'
+        data_pair = { 
+            '500hPa': ('500hPa_気温', '500hPa_高度'), 
+            '700hPa': ('700hPa_気温', '700hPa_高度'), 
+            '850hPa': ('850hPa_気温', '850hPa_高度'), 
+            '地上'  : ('地上_気温',   '地上_海面気圧'), 
+        }
+        
+        for name in data_pair:
+            temp_column, altitude_column = data_pair[name]
+            
+            plot = sns.relplot(x=temp_column, y=altitude_column, hue=label, data=df)
+            filename = 'temperature_x_altitude_{0:s}_relplot.png'.format(name)
+            scatter_plot_file = os.path.join(temp_altitude_dirpath, filename)
+            plot.savefig(scatter_plot_file)
         
     ##################################################
     # 学習・評価・予測用のデータをロードする
