@@ -11,7 +11,7 @@ if __name__ == '__main__':
     
     
     # GSMデータの分析クラス
-    run_name = 'gsm_ver1'
+    run_name = 'analysis_gsm_ver1'
     analyzer_param = {
         'base_dir'              : os.getcwd(),
         'temp_dir'              : 'temp',

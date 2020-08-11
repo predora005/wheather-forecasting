@@ -82,10 +82,13 @@ class GsmDataAnalyzer2020Ver1:
         self._visualize_temperature_and_datetime(features, label, output_dirpath)
         
         # 高度と水戸-天気の関係を可視化する
-        self._visualize_altitude_cover_and_weather(features, label, output_dirpath)
+        self._visualize_altitude_and_weather(features, label, output_dirpath)
         
         # 水戸-天気と日付の関係を可視化する
         self._visualize_weather_and_datetime(features, label, output_dirpath)
+        
+        # 風速と水戸-天気の関係を可視化する
+        self._visualize_wind_and_weather(features, label, output_dirpath)
         
     ##################################################
     # 積算降水量と水戸-天気の関係を可視化する
@@ -97,6 +100,7 @@ class GsmDataAnalyzer2020Ver1:
         
         #total_precipitation_24h = data['Surf_lat36.00_long140.000_積算降水量_24h']
         df = pd.DataFrame( {
+            '月'            : features['月'],
             '積算降水量_03h': features['Surf_lat35.60_long140.000_積算降水量_03h'], 
             '積算降水量_06h': features['Surf_lat35.60_long140.000_積算降水量_06h'], 
             '積算降水量_12h': features['Surf_lat35.60_long140.000_積算降水量_12h'], 
@@ -108,6 +112,7 @@ class GsmDataAnalyzer2020Ver1:
         data_set = [    ('積算降水量_03h', '03h'), ('積算降水量_06h', '06h'),
                         ('積算降水量_12h', '12h'), ('積算降水量_24h', '24h'), ]
         
+        ##################################################
         # 積算降水量 x 水戸-天気
         for column, name in data_set:
             
@@ -130,7 +135,18 @@ class GsmDataAnalyzer2020Ver1:
             hist_file = os.path.join(precipitation_dirpath, filename)
             grid.savefig(hist_file)
 
+        ##################################################
+        # 月ごとの風速と天気の関係を可視化する
+        for column, name in data_set:
+            
+            plot = sns.relplot(x='月', y=column, hue=label, kind='line', ci="sd", data=df)
+            filename = 'total_precipitation_{0:s}_month_lineplot.png'.format(name)
+            lineplot_file = os.path.join(precipitation_dirpath, filename)
+            plot.savefig(lineplot_file)
+        
+        ##################################################
         # 積算降水量同士の関係を可視化する
+        df = df.drop(columns=['月'])
         pair_grid = sns.pairplot(df, hue=label);
         pair_file = os.path.join(precipitation_dirpath, 'total_precipitation_pairplot.png')
         pair_grid.savefig(pair_file)
@@ -157,6 +173,7 @@ class GsmDataAnalyzer2020Ver1:
         label = '水戸_天気'
         columns = [ '上層雲量', '中層雲量', '下層雲量', '全雲量',]
         
+        ##################################################
         # 雲量 x 水戸-天気
         for column in columns:
             
@@ -179,6 +196,7 @@ class GsmDataAnalyzer2020Ver1:
             hist_file = os.path.join(cloud_dirpath, filename)
             grid.savefig(hist_file)
                 
+        ##################################################
         # 雲量同士の関係を可視化する
         pair_grid = sns.pairplot(df, hue=label);
         pair_file = os.path.join(cloud_dirpath, 'cloud_cover_pairplot.png')
@@ -231,6 +249,7 @@ class GsmDataAnalyzer2020Ver1:
             hist_file = os.path.join(temp_dirpath, filename)
             grid.savefig(hist_file)
                 
+        ##################################################
         # 気温同士の関係を可視化する
         pair_grid = sns.pairplot(df, hue=label);
         pair_file = os.path.join(temp_dirpath, 'temperature_pairplot.png')
@@ -247,7 +266,6 @@ class GsmDataAnalyzer2020Ver1:
         os.makedirs(temp_dirpath, exist_ok=True)
         
         df = pd.DataFrame( {
-            #'月'            : features['日付'].dt.month,
             '月'            : features['月'],
             '月-時'         : features['月-時'],
             '500hPa_気温'   : features['500hPa_lat37.20_long138.000_気温'] - 273.15,
@@ -276,12 +294,6 @@ class GsmDataAnalyzer2020Ver1:
         
         ##################################################
         # 月-時ごとの気温と天気の関係を可視化する
-        #def concat_month_and_hour(row):
-        #    month = row['月']
-        #    hour = row['時']
-        #    return '{0:02d}-{1:02d}'.format(month, hour)
-        #    
-        #df['月-時'] = df.apply(concat_month_and_hour, axis=1)
         for column in columns:
             
             plot = sns.relplot(x='月-時', y=column, hue=label, kind='line', ci="sd", data=df, aspect=4)
@@ -296,13 +308,12 @@ class GsmDataAnalyzer2020Ver1:
     ##################################################
     # 高度と水戸-天気の関係を可視化する
     ##################################################
-    def _visualize_altitude_cover_and_weather(self, features, lebel_data, output_dirpath):
+    def _visualize_altitude_and_weather(self, features, lebel_data, output_dirpath):
         
         altitude_dirpath = os.path.join(output_dirpath, 'altitude')
         os.makedirs(altitude_dirpath, exist_ok=True)
         
         df = pd.DataFrame( {
-            #'月'            : features['日付'].dt.month,
             '月'            : features['月'],
             '月-時'         : features['月-時'],
             '500hPa_高度'   : features['500hPa_lat34.80_long136.000_高度'],
@@ -365,15 +376,13 @@ class GsmDataAnalyzer2020Ver1:
         os.makedirs(weather_dirpath, exist_ok=True)
         
         df = pd.DataFrame( {
-            #'月'            : features['日付'].dt.month,
             '月'            : features['月'],
             '月-時'         : features['月-時'],
             '水戸_天気'     : lebel_data
         })
         
         label = '水戸_天気'
-        #columns = [ '500hPa_気温', '700hPa_気温', '850hPa_気温', '地上_気温',]
-        
+
         ##################################################
         # 月ごとの天気を可視化する
         plot = sns.catplot(x='月', hue=label, kind='count', data=df)
@@ -382,18 +391,74 @@ class GsmDataAnalyzer2020Ver1:
         
         ##################################################
         # 月-時ごとの天気を可視化する
-        #def concat_month_and_hour(row):
-        #    month = row['月']
-        #    hour = row['時']
-        #    return '{0:02d}-{1:02d}'.format(month, hour)
-        #    
-        #df['月-時'] = df.apply(concat_month_and_hour, axis=1)
         plot = sns.catplot(x='月-時', hue=label, kind='count', data=df, aspect=4)
         catplot_file = os.path.join(weather_dirpath, 'weather_month_hour_catplot.png')
         plot.savefig(catplot_file)
         
         plt.close()
     
+    ##################################################
+    # 風速と水戸-天気の関係を可視化する
+    ##################################################
+    def _visualize_wind_and_weather(self, features, lebel_data, output_dirpath):
+        
+        wind_dirpath = os.path.join(output_dirpath, 'wind_u')
+        os.makedirs(wind_dirpath, exist_ok=True)
+        
+        df = pd.DataFrame( {
+            '月'            : features['月'],
+            '月-時'         : features['月-時'],
+            '500hPa_東西風' : features['500hPa_lat35.60_long140.000_東西風'],
+            '700hPa_東西風' : features['700hPa_lat35.60_long140.000_東西風'],
+            '850hPa_東西風' : features['850hPa_lat35.60_long140.000_東西風'],
+            '地上_東西風'   : features['Surf_lat35.60_long140.000_東西風'],
+            '水戸_天気'     : lebel_data
+        } )
+        
+        label = '水戸_天気'
+        columns = [ '500hPa_東西風', '700hPa_東西風', '850hPa_東西風', '地上_東西風']
+        
+        ##################################################
+        # 東西風 x 水戸-天気
+        for column in columns:
+            
+            # KDEプロット
+            grid = sns.FacetGrid(df, hue=label, aspect=2)
+            grid.map(sns.kdeplot, column, shade=True)
+            min_value, max_value = df[column].min(), df[column].max()
+            grid.set(xlim=(min_value, max_value))
+            grid.add_legend()
+            filename = 'wind_u_{0:s}_kdeplot.png'.format(column)
+            kdeplot_file = os.path.join(wind_dirpath, filename)
+            grid.savefig(kdeplot_file)
+            
+            # ヒストグラム
+            #bins = np.arange(0, max_value, 1)
+            grid = sns.FacetGrid(df, col=label, height=3)
+            grid.map(plt.hist, column, bins=20)
+            grid.add_legend()
+            filename = 'wind_u_{0:s}_hist.png'.format(column)
+            hist_file = os.path.join(wind_dirpath, filename)
+            grid.savefig(hist_file)
+                
+        ##################################################
+        # 月ごとの風速と天気の関係を可視化する
+        for column in columns:
+            
+            plot = sns.relplot(x='月', y=column, hue=label, kind='line', ci="sd", data=df)
+            filename = 'wind_u_{0:s}_month_lineplot.png'.format(column)
+            lineplot_file = os.path.join(wind_dirpath, filename)
+            plot.savefig(lineplot_file)
+        
+        ###################################################
+        # 風速同士の関係を可視化する
+        wind_df = df.drop(columns=['月', '月-時'])
+        pair_grid = sns.pairplot(wind_df, hue=label);
+        pair_file = os.path.join(wind_dirpath, 'wind_u_pairplot.png')
+        pair_grid.savefig(pair_file)
+        
+        plt.close()
+        
     ##################################################
     # 学習・評価・予測用のデータをロードする
     ##################################################
