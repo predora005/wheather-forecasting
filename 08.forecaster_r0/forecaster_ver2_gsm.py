@@ -58,7 +58,7 @@ if __name__ == '__main__':
         'input_dir'             : 'input6',
         'input2_dir'            : 'input2',
         'output_dir'            :  'output',
-        'gsm_thinout_interval'  : (4,4),
+        'gsm_thinout_interval'  : (5,5),
         'weather_convert_mode'  : 'default',
         'class_names'           : ['Sunny', 'Cloud', 'Rain'],
         #'weather_convert_mode'  : 'rain_or_not',
