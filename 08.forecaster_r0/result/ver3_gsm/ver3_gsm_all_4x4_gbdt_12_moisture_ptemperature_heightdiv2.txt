@@ -12,7 +12,7 @@
             宮崎〜仙台 (32,132)〜(38,141)の850,700,500,300hPa気圧面GSMデータ
               - 高度, 東西風, 南北風, 気温, 相対湿度
     - 出力：12時間後の水戸の天気
-    - 正解率： 70.3% (0.695, 0.710, 0.702, 0.706)
+    - 正解率： 70.5% (0.708, 0.705, 0.700, 0.705)
 ##################################################
 Using TensorFlow backend.
 /home/ec2-user/.local/lib/python3.7/site-packages/tensorflow/python/framework/dtypes.py:516: FutureWarning: Passing (type, 1) or '1type' as a synonym of type is deprecated; in a future version of numpy, it will be understood as (type, (1,)) / '(1,)type'.
@@ -41,9 +41,9 @@ Using TensorFlow backend.
   np_resource = np.dtype([("resource", np.ubyte, 1)])
 <class 'pandas.core.frame.DataFrame'>
 Int64Index: 5844 entries, 0 to 1459
-Columns: 3362 entries, 日付 to 300hPa_lat32.40_long141.000_高度偏差
-dtypes: datetime64[ns](1), float64(3360), int64(1)
-memory usage: 149.9 MB
+Columns: 3762 entries, 日付 to 300hPa-Surf_lat32.40_long141.000_相当温位
+dtypes: datetime64[ns](1), float64(3760), int64(1)
+memory usage: 167.8 MB
 None
 /home/ec2-user/weather-forecasting/08.forecaster_r0/runner/gsm_runner_ver3.py:67: DtypeWarning: Columns (3,4,7,8,9,17) have mixed types.Specify dtype option on import or set low_memory=False.
   self._load_data()
@@ -65,141 +65,144 @@ Data columns (total 10 columns):
 dtypes: datetime64[ns](1), float64(3), int64(2), object(4)
 memory usage: 502.2+ KB
 None
-[0]     train-merror:0.26706    eval-merror:0.35797
+[0]     train-merror:0.26683    eval-merror:0.35455
 Multiple eval metrics have been passed: 'eval-merror' will be used for early stopping.
 
 Will train until eval-merror hasn't improved in 40 rounds.
-[50]    train-merror:0.13627    eval-merror:0.30527
+[50]    train-merror:0.13673    eval-merror:0.30322
+[100]   train-merror:0.06049    eval-merror:0.29843
+[150]   train-merror:0.02168    eval-merror:0.29363
+[200]   train-merror:0.00525    eval-merror:0.29227
 Stopping. Best iteration:
-[55]    train-merror:0.12919    eval-merror:0.29911
+[162]   train-merror:0.01666    eval-merror:0.29158
 
-Best Score:0.2991, Iteratin:55, Ntree_Limit:56
+Best Score:0.2916, Iteratin:162, Ntree_Limit:163
 #################################
   xgboost_fold_00
 #################################
-Accuracy:0.695
+Accuracy:0.708
   ## Sunny
-    Accuracy(Sunny-Sunny):0.769  472/614
-    Failure (Sunny-Cloud):0.221  136/614
-    Failure (Sunny-Rain):0.010  6/614
+    Accuracy(Sunny-Sunny):0.764  469/614
+    Failure (Sunny-Cloud):0.233  143/614
+    Failure (Sunny-Rain):0.003  2/614
   ## Cloud
-    Failure (Cloud-Sunny):0.225  146/649
-    Accuracy(Cloud-Cloud):0.684  444/649
-    Failure (Cloud-Rain):0.091  59/649
+    Failure (Cloud-Sunny):0.213  138/649
+    Accuracy(Cloud-Cloud):0.710  461/649
+    Failure (Cloud-Rain):0.077  50/649
   ## Rain
     Failure (Rain-Sunny):0.061  12/198
-    Failure (Rain-Cloud):0.434  86/198
-    Accuracy(Rain-Rain):0.505  100/198
+    Failure (Rain-Cloud):0.409  81/198
+    Accuracy(Rain-Rain):0.530  105/198
 Precision:
-  ## Sunny: 0.749  472/630
-  ## Cloud: 0.667  444/666
-  ## Rain: 0.606  100/165
+  ## Sunny: 0.758  469/619
+  ## Cloud: 0.673  461/685
+  ## Rain: 0.669  105/157
 Recall:
-  ## Sunny: 0.769  472/614
-  ## Cloud: 0.684  444/649
-  ## Rain: 0.505  100/198
-[0]     train-merror:0.27596    eval-merror:0.33949
+  ## Sunny: 0.764  469/614
+  ## Cloud: 0.710  461/649
+  ## Rain: 0.530  105/198
+[0]     train-merror:0.27596    eval-merror:0.33539
 Multiple eval metrics have been passed: 'eval-merror' will be used for early stopping.
 
 Will train until eval-merror hasn't improved in 40 rounds.
-[50]    train-merror:0.14494    eval-merror:0.29569
-[100]   train-merror:0.06528    eval-merror:0.28474
+[50]    train-merror:0.13924    eval-merror:0.29363
 Stopping. Best iteration:
-[97]    train-merror:0.06848    eval-merror:0.28337
+[37]    train-merror:0.16480    eval-merror:0.28610
 
-Best Score:0.2834, Iteratin:97, Ntree_Limit:98
+Best Score:0.2861, Iteratin:37, Ntree_Limit:38
 #################################
   xgboost_fold_01
 #################################
-Accuracy:0.710
+Accuracy:0.705
   ## Sunny
-    Accuracy(Sunny-Sunny):0.846  589/696
-    Failure (Sunny-Cloud):0.145  101/696
-    Failure (Sunny-Rain):0.009  6/696
+    Accuracy(Sunny-Sunny):0.833  580/696
+    Failure (Sunny-Cloud):0.161  112/696
+    Failure (Sunny-Rain):0.006  4/696
   ## Cloud
-    Failure (Cloud-Sunny):0.320  180/563
-    Accuracy(Cloud-Cloud):0.638  359/563
-    Failure (Cloud-Rain):0.043  24/563
+    Failure (Cloud-Sunny):0.321  181/563
+    Accuracy(Cloud-Cloud):0.639  360/563
+    Failure (Cloud-Rain):0.039  22/563
   ## Rain
-    Failure (Rain-Sunny):0.104  21/202
-    Failure (Rain-Cloud):0.455  92/202
-    Accuracy(Rain-Rain):0.441  89/202
+    Failure (Rain-Sunny):0.119  24/202
+    Failure (Rain-Cloud):0.436  88/202
+    Accuracy(Rain-Rain):0.446  90/202
 Precision:
-  ## Sunny: 0.746  589/790
-  ## Cloud: 0.650  359/552
-  ## Rain: 0.748  89/119
+  ## Sunny: 0.739  580/785
+  ## Cloud: 0.643  360/560
+  ## Rain: 0.776  90/116
 Recall:
-  ## Sunny: 0.846  589/696
-  ## Cloud: 0.638  359/563
-  ## Rain: 0.441  89/202
-[0]     train-merror:0.25719    eval-merror:0.34931
+  ## Sunny: 0.833  580/696
+  ## Cloud: 0.639  360/563
+  ## Rain: 0.446  90/202
+[0]     train-merror:0.25605    eval-merror:0.34795
 Multiple eval metrics have been passed: 'eval-merror' will be used for early stopping.
 
 Will train until eval-merror hasn't improved in 40 rounds.
-[50]    train-merror:0.13692    eval-merror:0.29589
+[50]    train-merror:0.13806    eval-merror:0.29931
 Stopping. Best iteration:
-[17]    train-merror:0.20082    eval-merror:0.29520
+[15]    train-merror:0.20584    eval-merror:0.29520
 
-Best Score:0.2952, Iteratin:17, Ntree_Limit:18
+Best Score:0.2952, Iteratin:15, Ntree_Limit:16
 #################################
   xgboost_fold_02
 #################################
-Accuracy:0.702
+Accuracy:0.700
   ## Sunny
     Accuracy(Sunny-Sunny):0.786  532/677
-    Failure (Sunny-Cloud):0.211  143/677
-    Failure (Sunny-Rain):0.003  2/677
+    Failure (Sunny-Cloud):0.207  140/677
+    Failure (Sunny-Rain):0.007  5/677
   ## Cloud
-    Failure (Cloud-Sunny):0.272  163/600
-    Accuracy(Cloud-Cloud):0.658  395/600
-    Failure (Cloud-Rain):0.070  42/600
+    Failure (Cloud-Sunny):0.268  161/600
+    Accuracy(Cloud-Cloud):0.657  394/600
+    Failure (Cloud-Rain):0.075  45/600
   ## Rain
-    Failure (Rain-Sunny):0.104  19/183
-    Failure (Rain-Cloud):0.361  66/183
-    Accuracy(Rain-Rain):0.536  98/183
+    Failure (Rain-Sunny):0.109  20/183
+    Failure (Rain-Cloud):0.366  67/183
+    Accuracy(Rain-Rain):0.525  96/183
 Precision:
-  ## Sunny: 0.745  532/714
-  ## Cloud: 0.654  395/604
-  ## Rain: 0.690  98/142
+  ## Sunny: 0.746  532/713
+  ## Cloud: 0.656  394/601
+  ## Rain: 0.658  96/146
 Recall:
   ## Sunny: 0.786  532/677
-  ## Cloud: 0.658  395/600
-  ## Rain: 0.536  98/183
-[0]     train-merror:0.27955    eval-merror:0.34247
+  ## Cloud: 0.657  394/600
+  ## Rain: 0.525  96/183
+[0]     train-merror:0.27796    eval-merror:0.34384
 Multiple eval metrics have been passed: 'eval-merror' will be used for early stopping.
 
 Will train until eval-merror hasn't improved in 40 rounds.
-[50]    train-merror:0.13898    eval-merror:0.29452
-[100]   train-merror:0.05774    eval-merror:0.29520
+[50]    train-merror:0.13578    eval-merror:0.30685
+[100]   train-merror:0.05500    eval-merror:0.29589
+[150]   train-merror:0.01803    eval-merror:0.29384
+[200]   train-merror:0.00502    eval-merror:0.29247
 Stopping. Best iteration:
-[63]    train-merror:0.11639    eval-merror:0.28562
+[179]   train-merror:0.00890    eval-merror:0.29041
 
-Best Score:0.2856, Iteratin:63, Ntree_Limit:64
+Best Score:0.2904, Iteratin:179, Ntree_Limit:180
 #################################
   xgboost_fold_03
 #################################
-Accuracy:0.706
+Accuracy:0.705
   ## Sunny
-    Accuracy(Sunny-Sunny):0.734  538/733
-    Failure (Sunny-Cloud):0.258  189/733
-    Failure (Sunny-Rain):0.008  6/733
+    Accuracy(Sunny-Sunny):0.739  542/733
+    Failure (Sunny-Cloud):0.254  186/733
+    Failure (Sunny-Rain):0.007  5/733
   ## Cloud
-    Failure (Cloud-Sunny):0.185  94/509
-    Accuracy(Cloud-Cloud):0.764  389/509
+    Failure (Cloud-Sunny):0.181  92/509
+    Accuracy(Cloud-Cloud):0.768  391/509
     Failure (Cloud-Rain):0.051  26/509
   ## Rain
     Failure (Rain-Sunny):0.055  12/218
-    Failure (Rain-Cloud):0.468  102/218
-    Accuracy(Rain-Rain):0.477  104/218
+    Failure (Rain-Cloud):0.500  109/218
+    Accuracy(Rain-Rain):0.445  97/218
 Precision:
-  ## Sunny: 0.835  538/644
-  ## Cloud: 0.572  389/680
-  ## Rain: 0.765  104/136
+  ## Sunny: 0.839  542/646
+  ## Cloud: 0.570  391/686
+  ## Rain: 0.758  97/128
 Recall:
-  ## Sunny: 0.734  538/733
-  ## Cloud: 0.764  389/509
-  ## Rain: 0.477  104/218
+  ## Sunny: 0.739  542/733
+  ## Cloud: 0.768  391/509
+  ## Rain: 0.445  97/218
 
 
 Process exited with code: 0
-Pane is dead
