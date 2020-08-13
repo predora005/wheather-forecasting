@@ -111,6 +111,12 @@ class GsmLoader2020Ver3(AbsLoader):
         # 指定気圧面の相当温位を追加する
         gsm_df = gsm.add_potential_temperature(gsm_df)
         
+        # 指定気圧面のジオポテンシャル高度偏差を追加する
+        gsm_df = gsm.add_height_diviation(gsm_df)
+        
+        # 相当温位の指定気圧面と地上の差を追加する
+        gsm_df = gsm.add_difference_surface_and_pall(gsm_df, ['相当温位'])
+        
         # 不要な列を削る
         drop_columns = [
             #'南北風', 

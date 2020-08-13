@@ -151,12 +151,13 @@ def thin_out_gsm_with_interpolation(df, interval=(4,4), inplace=True):
 ##################################################
 # 地表と指定気圧面の特徴量の差をDataFrameに追加する
 ##################################################
-def add_difference_surface_and_pall(df, inplace=True):
+def add_difference_surface_and_pall(df, features, inplace=True):
     """ 地表と指定気圧面の特徴量の差をDataFrameに追加する
 
     Args:
-        df(DataFrame) : 変更対象のDataFrame
-        inplace(bool) : 元のDataFrameを変更するか否か
+        df(DataFrame)   : 変更対象のDataFrame
+        features(list)  : 差を追加する特徴量のリスト
+        inplace(bool)   : 元のDataFrameを変更するか否か
 
     Returns:
         DataFrame : 変更後のDataFrame
@@ -169,11 +170,15 @@ def add_difference_surface_and_pall(df, inplace=True):
     # 緯度,経度,指定気圧面,特徴量のリストを取得
     latitudes, longitudes = _get_latitudes_and_longitudes(new_df)
     pressure_surfaces = _get_pressure_surfaces(new_df)
-    features = _get_features(new_df)
-
+    all_features = _get_features(new_df)
+    
     for latitude in latitudes:          # 緯度のループ
         for longitude in longitudes:    # 経度のループ
-            for feature in features:    # 特徴量のループ
+            for feature in all_features:    # 特徴量のループ
+                
+                # 指定した特徴量以外はcontinue
+                if feature not in features:
+                    continue
                 
                 # 地表の列名を作成
                 surface_column = "Surf_lat{0:s}_long{1:s}_{2:s}".format(
@@ -270,12 +275,14 @@ def add_potential_temperature(df, inplace=True):
     for latitude in latitudes:          # 緯度のループ
         for longitude in longitudes:    # 経度のループ
             
+            ##################################################
+            # 指定気圧面の相当温位をDataFrameに追加する
             for pressure_surface in pressure_surfaces:  # 指定気圧面のループ
                 
                 # 計算用に気圧のndarrayを用意する
                 pressure = np.full(new_df.shape[0], float(pressure_surface))
                 
-                # 指定気圧面の気温を取得する
+                # 指定気圧面の気温,相対湿度を取得する
                 temperature = "{0:s}hPa_lat{1:s}_long{2:s}_気温".format(
                     pressure_surface, latitude, longitude)
                 humidity= "{0:s}hPa_lat{1:s}_long{2:s}_相対湿度".format(
@@ -299,6 +306,31 @@ def add_potential_temperature(df, inplace=True):
                     pressure_surface, latitude, longitude)
                 new_df[pt] = potensial_temperature.magnitude
             
+            ##################################################
+            # 地上の相当温位をDataFrameに追加する
+            
+            # 気温,相対湿度,地上気圧を取得する
+            temperature = "Surf_lat{0:s}_long{1:s}_気温".format(latitude, longitude)
+            humidity= "Surf_lat{0:s}_long{1:s}_相対湿度".format(latitude, longitude)
+            pressure = "Surf_lat{0:s}_long{1:s}_地上気圧".format(latitude, longitude)
+
+            # 露点温度を計算する
+            dewpoint = metpy.calc.dewpoint_from_relative_humidity(
+                new_df[temperature].values * units('K'),
+                new_df[humidity].values / 100.
+            ).to(units('K'))
+            
+            # 相当温位を計算する
+            potensial_temperature = metpy.calc.equivalent_potential_temperature(
+                    new_df[pressure].values / 100 * units('hPa'),
+                    new_df[temperature].values * units('K'),
+                    dewpoint
+            )
+            
+            # 相当温位の列を追加する
+            pt = "Surf_lat{0:s}_long{1:s}_相当温位".format(latitude, longitude)
+            new_df[pt] = potensial_temperature.magnitude
+    
     return new_df
 
 ##################################################
@@ -358,6 +390,55 @@ def extract_latitude_and_longitude(df, latitudes, longitudes, inplace=True):
             
     # 指定した列のみのDataFrameを作成する
     new_df = new_df[new_columns]
+    
+    return new_df
+    
+##################################################
+# 指定気圧面のジオポテンシャル高度偏差をDataFrameに追加する
+##################################################
+def add_height_diviation(df, inplace=True):
+    """ 指定気圧面のジオポテンシャル高度偏差をDataFrameに追加する
+
+    Args:
+        df(DataFrame) : 変更対象のDataFrame
+        inplace(bool) : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変更後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    # 緯度,経度,指定気圧面のリストを取得
+    latitudes, longitudes = _get_latitudes_and_longitudes(new_df)
+    pressure_surfaces = _get_pressure_surfaces(new_df)
+    
+    num_height = len(latitudes) * len(longitudes)
+    for pressure_surface in pressure_surfaces:  # 指定気圧面のループ
+        
+        mean_height = 0
+        for latitude in latitudes:          # 緯度のループ
+            for longitude in longitudes:    # 経度のループ
+                
+                # 指定気圧面のジオポテンシャル高度を取得する
+                height = "{0:s}hPa_lat{1:s}_long{2:s}_高度".format(
+                    pressure_surface, latitude, longitude)
+                    
+                mean_height += new_df[height] / float(num_height)
+        
+        # 高度偏差の列を追加する
+        for latitude in latitudes:          # 緯度のループ
+            for longitude in longitudes:    # 経度のループ
+            
+                height = "{0:s}hPa_lat{1:s}_long{2:s}_高度".format(
+                    pressure_surface, latitude, longitude)
+                
+                height_diviation = "{0:s}hPa_lat{1:s}_long{2:s}_高度偏差".format(
+                    pressure_surface, latitude, longitude)
+                
+                new_df[height_diviation] = new_df[height] - mean_height
     
     return new_df
     
