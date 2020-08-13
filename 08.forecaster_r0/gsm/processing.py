@@ -1,16 +1,17 @@
 # coding: utf-8
 
-import math
-from enum import Enum
 import numpy as np
 import pandas as pd
 import re
+from metpy.units import units
+import metpy.calc
+#from metpy.calc import dewpoint_from_relative_humidity, equivalent_potential_temperature
 
 ##################################################
-# 天気記号を数値に変換する
+# GSMデータを指定した間隔で間引く
 ##################################################
 def thin_out_gsm(df, interval=(2,2), inplace=True):
-    """ 天気記号を数値に変換する
+    """ GSMデータを指定した間隔で間引く
     
     Args:
         df(DataFrame) : 変換対象のDataFrame
@@ -72,6 +73,82 @@ def thin_out_gsm(df, interval=(2,2), inplace=True):
     return new_df
 
 ##################################################
+# GSMデータを指定した間隔で間引く。
+# 間引く範囲の平均値で補間する。
+##################################################
+def thin_out_gsm_with_interpolation(df, interval=(4,4), inplace=True):
+    """ GSMデータを指定した間隔で間引く
+        間引く範囲の平均値で補間する。
+    
+    Args:
+        df(DataFrame) : 変換対象のDataFrame
+        inplace(bool) : 元のDataFrameを変更するか否か
+    
+    Returns:
+        DataFrame : 変換後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+        
+    # 列名から緯度,経度を抽出する
+    all_latitudes, all_longitudes = _get_latitudes_and_longitudes(new_df)
+    
+    # 残す緯度,経度を計算する
+    base_latitudes = []
+    for i in range(0, len(all_latitudes), interval[0]):
+        base_latitudes.append(all_latitudes[i])
+        
+    base_longitudes = []
+    for i in range(0, len(all_longitudes), interval[1]):
+        base_longitudes.append(all_longitudes[i])
+    
+    # 指定した緯度,経度を含む列を抽出する
+    remain_columns = ['日付', '時']         # 残す列のリスト
+    num_latitudes = len(all_latitudes)      # 緯度の数
+    num_longitudes = len(all_longitudes)    # 経度の数
+    columns = new_df.columns                # データフレームの全列
+    for column in new_df.columns:
+        
+        # 列名から地点名(Surf,300hPa等),緯度,経度,パラメータ名を抽出する
+        result = re.search(r"(.*)_lat(\d+\.\d+)_long(\d+\.\d+)_(.*)", column)
+        if result:
+            spot = result.group(1)
+            lati = result.group(2)
+            longi = result.group(3)
+            feature = result.group(4)
+            
+            # 残す緯度,経度のデータに間引くデータの平均値を代入する
+            if (lati in base_latitudes) and (longi in base_longitudes):
+                
+                # 残す列のリストに列名を追加
+                remain_columns.append(column)
+                
+                # インデックスの範囲を計算する
+                lati_st = all_latitudes.index(lati)
+                longi_st = all_longitudes.index(longi)
+                lati_end = min(lati_st + interval[0], num_latitudes)
+                longi_end = min(longi_st + interval[1], num_longitudes)
+                
+                # 指定した範囲の緯度,経度データの合計値を計算する
+                sum_value = 0
+                for i in range(lati_st, lati_end):
+                    for j in range(longi_st, longi_end):
+                        col = "{0:s}_lat{1:s}_long{2:s}_{3:s}".format(
+                            spot, all_latitudes[i], all_longitudes[j], feature)
+                        sum_value += new_df[col]
+                
+                # 平均値を残す列に代入する
+                num = interval[0] * interval[1]
+                new_df[column] = sum_value / num
+        
+    # 指定した列のみのDataFrameを作成する
+    new_df = new_df[remain_columns]
+    
+    return new_df
+
+##################################################
 # 地表と指定気圧面の特徴量の差をDataFrameに追加する
 ##################################################
 def add_difference_surface_and_pall(df, inplace=True):
@@ -121,7 +198,111 @@ def add_difference_surface_and_pall(df, inplace=True):
     return new_df
 
 ##################################################
-# 指定した緯度,経度のデータを抽出する
+# 指定気圧面の湿数をDataFrameに追加する
+##################################################
+def add_moisture(df, inplace=True):
+    """ 指定気圧面の湿数をDataFrameに追加する
+
+    Args:
+        df(DataFrame) : 変更対象のDataFrame
+        inplace(bool) : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変更後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    # 緯度,経度,指定気圧面のリストを取得
+    latitudes, longitudes = _get_latitudes_and_longitudes(new_df)
+    pressure_surfaces = _get_pressure_surfaces(new_df)
+
+    for latitude in latitudes:          # 緯度のループ
+        for longitude in longitudes:    # 経度のループ
+            
+            for pressure_surface in pressure_surfaces:  # 指定気圧面のループ
+                
+                # 指定気圧面の気温と湿度を取得する
+                temperature = "{0:s}hPa_lat{1:s}_long{2:s}_気温".format(
+                    pressure_surface, latitude, longitude)
+                humidity= "{0:s}hPa_lat{1:s}_long{2:s}_相対湿度".format(
+                    pressure_surface, latitude, longitude)
+                
+                # 露点温度を計算する
+                dewpoint = metpy.calc.dewpoint_from_relative_humidity(
+                    new_df[temperature].values * units('K'),
+                    new_df[humidity].values / 100.
+                ).to(units('K'))
+                
+                # 湿数の列を追加する
+                moisture = "{0:s}hPa_lat{1:s}_long{2:s}_湿数".format(
+                    pressure_surface, latitude, longitude)
+                
+                # 湿数 = 気温 - 露点温度
+                new_df[moisture] = new_df[temperature] - dewpoint.magnitude
+            
+    return new_df
+
+##################################################
+# 指定気圧面の相当温位をDataFrameに追加する
+##################################################
+def add_potential_temperature(df, inplace=True):
+    """ 指定気圧面の相当温位をDataFrameに追加する
+
+    Args:
+        df(DataFrame) : 変更対象のDataFrame
+        inplace(bool) : 元のDataFrameを変更するか否か
+
+    Returns:
+        DataFrame : 変更後のDataFrame
+    """
+    if inplace:
+        new_df = df
+    else:
+        new_df = df.copy()
+    
+    # 緯度,経度,指定気圧面のリストを取得
+    latitudes, longitudes = _get_latitudes_and_longitudes(new_df)
+    pressure_surfaces = _get_pressure_surfaces(new_df)
+
+    for latitude in latitudes:          # 緯度のループ
+        for longitude in longitudes:    # 経度のループ
+            
+            for pressure_surface in pressure_surfaces:  # 指定気圧面のループ
+                
+                # 計算用に気圧のndarrayを用意する
+                pressure = np.full(new_df.shape[0], float(pressure_surface))
+                
+                # 指定気圧面の気温を取得する
+                temperature = "{0:s}hPa_lat{1:s}_long{2:s}_気温".format(
+                    pressure_surface, latitude, longitude)
+                humidity= "{0:s}hPa_lat{1:s}_long{2:s}_相対湿度".format(
+                    pressure_surface, latitude, longitude)
+
+                # 露点温度を計算する
+                dewpoint = metpy.calc.dewpoint_from_relative_humidity(
+                    new_df[temperature].values * units('K'),
+                    new_df[humidity].values / 100.
+                ).to(units('K'))
+                
+                # 相当温位を計算する
+                potensial_temperature = metpy.calc.equivalent_potential_temperature(
+                        pressure * units('hPa'),
+                        new_df[temperature].values * units('K'),
+                        dewpoint
+                )
+                
+                # 相当温位の列を追加する
+                pt = "{0:s}hPa_lat{1:s}_long{2:s}_相当温位".format(
+                    pressure_surface, latitude, longitude)
+                new_df[pt] = potensial_temperature.magnitude
+            
+    return new_df
+
+##################################################
+# 指定した範囲の緯度,経度のデータを抽出する
 ##################################################
 def extract_latitude_and_longitude(df, latitudes, longitudes, inplace=True):
     """ 指定した緯度,経度のデータを抽出する

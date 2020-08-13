@@ -112,7 +112,13 @@ class GsmLoader2020Ver2(AbsLoader):
         # 指定した緯度,経度のデータを抽出する
         #   静岡〜いわき (35,138.8)〜(36.6,140.7)
         #gsm_df = gsm.extract_latitude_and_longitude(gsm_df, latitudes=(35,37), longitudes=(138, 141))
-
+        
+        # 指定気圧面の湿数を追加する
+        gsm_df = gsm.add_moisture(gsm_df)
+        
+        # 指定気圧面の相当温位を追加する
+        gsm_df = gsm.add_potential_temperature(gsm_df)
+        
         return gsm_df
     
     ##################################################

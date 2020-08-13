@@ -68,38 +68,29 @@ class GsmLoader2020Ver3(AbsLoader):
         
         # 保存ファイルの有無を確認する
         os.makedirs(self._temp_dir, exist_ok=True)
-        gsm_csv = os.path.join(self._temp_dir, 'gsm.csv')
-        exist_csv = os.path.isfile(gsm_csv)
+        gsm_pickle = os.path.join(self._temp_dir, 'gsm.pickle')
+        exist_pickle = os.path.isfile(gsm_pickle)
         
-        if (reload == False) and (exist_csv == True):
+        if (reload == False) and (exist_pickle == True):
             # 読み込み済み、かつ、リロード無しの場合は、
             # 保存したファイルを読み込む
-            gsm_df = pd.read_csv(gsm_csv, index_col=0, parse_dates=[1])
+            gsm_df = pd.read_pickle(gsm_pickle)
         else:
-            #gsm_df = gsm.load_gsm_csv(self._input_dir)
-            gsm_df = gsm.load_gsm_pickle(self._input_dir)
-            gsm_df = gsm.thin_out_gsm(gsm_df, interval=self._thinout_interval)
-            gsm_df.to_csv(gsm_csv)
-        
+            #gsm_df = gsm.load_gsm_pickle(self._input_dir)
+            gsm_df = gsm.load_gsm_pickle_one_dir(self._input_dir)
+            
+            # GSMデータを指定した間隔で間引く
+            #gsm_df = gsm.thin_out_gsm(gsm_df, interval=self._thinout_interval)
+            gsm_df = gsm.thin_out_gsm_with_interpolation(gsm_df, interval=self._thinout_interval)
+            
+            gsm_df.to_pickle(gsm_pickle)
+            
         return gsm_df
         
     ##################################################
     # GSMデータに前処理を施す
     ##################################################
     def _process_gsm_weather(self, gsm_df):
-        
-        # 不要な列を削る
-        drop_columns = [
-            #'南北風', 
-            #'積算降水量_12h',
-            #'積算降水量_06h', 
-            '積算降水量_03h', 
-            '下層雲量', 
-            '中層雲量',
-            '地上気圧', 
-            '上昇流',
-        ]
-        gsm_df = wdfproc.drop_columns(gsm_df, drop_columns)
         
         # 地表と指定気圧面の差を追加する
         #gsm_df = gsm.add_difference_surface_and_pall(gsm_df)
@@ -113,7 +104,27 @@ class GsmLoader2020Ver3(AbsLoader):
         # 指定した緯度,経度のデータを抽出する
         #   静岡〜いわき (35,138.8)〜(36.6,140.7)
         #gsm_df = gsm.extract_latitude_and_longitude(gsm_df, latitudes=(35,37), longitudes=(138, 141))
-
+        
+        # 指定気圧面の湿数を追加する
+        gsm_df = gsm.add_moisture(gsm_df)
+        
+        # 指定気圧面の相当温位を追加する
+        gsm_df = gsm.add_potential_temperature(gsm_df)
+        
+        # 不要な列を削る
+        drop_columns = [
+            #'南北風', 
+            #'積算降水量_12h',
+            #'積算降水量_06h', 
+            #'相対湿度'
+            '積算降水量_03h', 
+            '下層雲量', 
+            '中層雲量',
+            '地上気圧',
+            '上昇流',
+        ]
+        gsm_df = wdfproc.drop_columns(gsm_df, drop_columns)
+        
         return gsm_df
     
     ##################################################

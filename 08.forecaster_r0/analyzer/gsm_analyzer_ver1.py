@@ -225,10 +225,10 @@ class GsmDataAnalyzer2020Ver1:
         os.makedirs(temp_dirpath, exist_ok=True)
         
         df = pd.DataFrame( {
-            '500hPa_気温': features['500hPa_lat37.20_long138.000_気温'],
-            '700hPa_気温': features['700hPa_lat37.20_long138.000_気温'],
-            '850hPa_気温': features['850hPa_lat37.20_long138.000_気温'],
-            '地上_気温'  : features['Surf_lat37.20_long138.000_気温'],
+            '500hPa_気温': features['500hPa_lat35.60_long138.000_気温'],
+            '700hPa_気温': features['700hPa_lat35.60_long138.000_気温'],
+            '850hPa_気温': features['850hPa_lat35.60_long138.000_気温'],
+            '地上_気温'  : features['Surf_lat35.60_long138.000_気温'],
             '水戸_天気': lebel_data
         } )
         
@@ -280,10 +280,10 @@ class GsmDataAnalyzer2020Ver1:
         df = pd.DataFrame( {
             '月'            : features['月'],
             '月-時'         : features['月-時'],
-            '500hPa_気温'   : features['500hPa_lat37.20_long138.000_気温'] - 273.15,
-            '700hPa_気温'   : features['700hPa_lat37.20_long138.000_気温']- 273.15,
-            '850hPa_気温'   : features['850hPa_lat37.20_long138.000_気温']- 273.15,
-            '地上_気温'     : features['Surf_lat37.20_long138.000_気温']- 273.15,
+            '500hPa_気温'   : features['500hPa_lat35.60_long138.000_気温'] - 273.15,
+            '700hPa_気温'   : features['700hPa_lat35.60_long138.000_気温']- 273.15,
+            '850hPa_気温'   : features['850hPa_lat35.60_long138.000_気温']- 273.15,
+            '地上_気温'     : features['Surf_lat35.60_long138.000_気温']- 273.15,
             '水戸_天気'     : lebel_data
         })
         
@@ -328,10 +328,10 @@ class GsmDataAnalyzer2020Ver1:
         df = pd.DataFrame( {
             '月'            : features['月'],
             '月-時'         : features['月-時'],
-            '500hPa_高度'   : features['500hPa_lat34.80_long136.000_高度'],
-            '700hPa_高度'   : features['700hPa_lat34.80_long136.000_高度'],
-            '850hPa_高度'   : features['850hPa_lat34.80_long136.000_高度'],
-            '地上_海面気圧' : features['Surf_lat34.80_long136.000_海面更正気圧'] / 100,
+            '500hPa_高度'   : features['500hPa_lat34.80_long135.000_高度'],
+            '700hPa_高度'   : features['700hPa_lat34.80_long135.000_高度'],
+            '850hPa_高度'   : features['850hPa_lat34.80_long135.000_高度'],
+            '地上_海面気圧' : features['Surf_lat34.80_long135.000_海面更正気圧'] / 100,
             '水戸_天気'     : lebel_data
         } )
         
@@ -420,14 +420,14 @@ class GsmDataAnalyzer2020Ver1:
         df = pd.DataFrame( {
             '月'            : features['月'],
             '月-時'         : features['月-時'],
-            '500hPa_東西風' : features['500hPa_lat35.60_long140.000_東西風'],
-            '700hPa_東西風' : features['700hPa_lat35.60_long140.000_東西風'],
-            '850hPa_東西風' : features['850hPa_lat35.60_long140.000_東西風'],
-            '地上_東西風'   : features['Surf_lat35.60_long140.000_東西風'],
-            '500hPa_南北風' : features['500hPa_lat35.60_long140.000_南北風'],
-            '700hPa_南北風' : features['700hPa_lat35.60_long140.000_南北風'],
-            '850hPa_南北風' : features['850hPa_lat35.60_long140.000_南北風'],
-            '地上_南北風'   : features['Surf_lat35.60_long140.000_南北風'],
+            '500hPa_東西風' : features['500hPa_lat34.80_long135.000_東西風'],
+            '700hPa_東西風' : features['700hPa_lat34.80_long135.000_東西風'],
+            '850hPa_東西風' : features['850hPa_lat34.80_long135.000_東西風'],
+            '地上_東西風'   : features['Surf_lat34.80_long135.000_東西風'],
+            '500hPa_南北風' : features['500hPa_lat34.80_long135.000_南北風'],
+            '700hPa_南北風' : features['700hPa_lat34.80_long135.000_南北風'],
+            '850hPa_南北風' : features['850hPa_lat34.80_long135.000_南北風'],
+            '地上_南北風'   : features['Surf_lat34.80_long135.000_南北風'],
             '水戸_天気'     : lebel_data
         } )
         
@@ -487,14 +487,14 @@ class GsmDataAnalyzer2020Ver1:
         os.makedirs(temp_altitude_dirpath, exist_ok=True)
         
         df = pd.DataFrame( {
-            '500hPa_気温'   : features['500hPa_lat36.40_long140.000_気温'] - 273.15,
-            '700hPa_気温'   : features['700hPa_lat36.40_long140.000_気温'] - 273.15,
-            '850hPa_気温'   : features['850hPa_lat36.40_long140.000_気温'] - 273.15,
-            '地上_気温'     : features['Surf_lat36.40_long138.000_気温'] - 273.15,
-            '500hPa_高度'   : features['500hPa_lat36.40_long140.000_高度'],
-            '700hPa_高度'   : features['700hPa_lat36.40_long140.000_高度'],
-            '850hPa_高度'   : features['850hPa_lat36.40_long140.000_高度'],
-            '地上_海面気圧' : features['Surf_lat36.40_long140.000_海面更正気圧'] / 100,
+            '500hPa_気温'   : features['500hPa_lat34.80_long135.000_気温'] - 273.15,
+            '700hPa_気温'   : features['700hPa_lat34.80_long135.000_気温'] - 273.15,
+            '850hPa_気温'   : features['850hPa_lat34.80_long135.000_気温'] - 273.15,
+            '地上_気温'     : features['Surf_lat34.80_long135.000_気温'] - 273.15,
+            '500hPa_高度'   : features['500hPa_lat34.80_long135.000_高度'],
+            '700hPa_高度'   : features['700hPa_lat34.80_long135.000_高度'],
+            '850hPa_高度'   : features['850hPa_lat34.80_long135.000_高度'],
+            '地上_海面気圧' : features['Surf_lat34.80_long135.000_海面更正気圧'] / 100,
             '水戸_天気'     : lebel_data
         } )
         
@@ -531,10 +531,10 @@ class GsmDataAnalyzer2020Ver1:
         
         df = pd.DataFrame( {
             '月'            : features['月'],
-            '500hPa_湿度'   : features['500hPa_lat34.80_long138.000_相対湿度'],
-            '700hPa_湿度'   : features['700hPa_lat34.80_long138.000_相対湿度'],
-            '850hPa_湿度'   : features['850hPa_lat34.80_long138.000_相対湿度'],
-            '地上_湿度'     : features['Surf_lat34.80_long138.000_相対湿度'],
+            '500hPa_湿度'   : features['500hPa_lat35.60_long138.000_相対湿度'],
+            '700hPa_湿度'   : features['700hPa_lat35.60_long138.000_相対湿度'],
+            '850hPa_湿度'   : features['850hPa_lat35.60_long138.000_相対湿度'],
+            '地上_湿度'     : features['Surf_lat35.60_long138.000_相対湿度'],
             '水戸_天気'     : lebel_data
         } )
         
@@ -594,10 +594,10 @@ class GsmDataAnalyzer2020Ver1:
             #'積算降水量_06h': features['Surf_lat35.60_long140.000_積算降水量_06h'], 
             #'積算降水量_12h': features['Surf_lat35.60_long140.000_積算降水量_12h'], 
             '積算降水量_24h': features['Surf_lat35.60_long140.000_積算降水量_24h'], 
-            '上層雲量'      : features['Surf_lat35.60_long140.000_上層雲量'],
-            #'中層雲量'      : features['Surf_lat35.60_long140.000_中層雲量'],
-            #'下層雲量'      : features['Surf_lat35.60_long140.000_下層雲量'],
-            '全雲量'        : features['Surf_lat35.60_long140.000_全雲量'],
+            '上層雲量'      : features['Surf_lat36.40_long135.000_上層雲量'],
+            #'中層雲量'      : features['Surf_lat36.40_long135.000_中層雲量'],
+            #'下層雲量'      : features['Surf_lat36.40_long135.000_下層雲量'],
+            '全雲量'        : features['Surf_lat36.40_long135.000_全雲量'],
             '水戸_天気'     : lebel_data
         } )
         
@@ -636,9 +636,9 @@ class GsmDataAnalyzer2020Ver1:
         
         df = pd.DataFrame( {
             '月'            : features['月'],
-            '500hPa_上昇流' : features['500hPa_lat36.40_long140.000_上昇流'],
-            '700hPa_上昇流' : features['700hPa_lat36.40_long140.000_上昇流'],
-            '850hPa_上昇流' : features['850hPa_lat36.40_long140.000_上昇流'],
+            '500hPa_上昇流' : features['500hPa_lat34.80_long135.000_上昇流'],
+            '700hPa_上昇流' : features['700hPa_lat34.80_long135.000_上昇流'],
+            '850hPa_上昇流' : features['850hPa_lat34.80_long135.000_上昇流'],
             '水戸_天気'     : lebel_data
         } )
         
